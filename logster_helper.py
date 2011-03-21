@@ -28,6 +28,7 @@ class MetricObject(object):
         self.value = value
         self.units = units
         self.metric_type = metric_type
+        self.timestamp = int(time())
 
 class LogsterParser(object):
     """Base class for logster parsers"""
