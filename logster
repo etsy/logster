@@ -76,7 +76,7 @@ cmdline.add_option('--metric-prefix', '-p', action='store',
 cmdline.add_option('--gmetric-options', action='store',
                     help='Options to pass to gmetric such as -d 180 -c /etc/ganglia/gmond.conf (default). These are passed directly to gmetric.',
                     default='-d 180 -c /etc/ganglia/gmond.conf')
-cmdline.add_option('--graphite-host', action='store', default='graphite.example.com:2003',
+cmdline.add_option('--graphite-host', action='store',
                     help='Hostname and port for Graphite collector, e.g. graphite.example.com:2003')
 cmdline.add_option('--state-dir', '-s', action='store', default=state_dir,
                     help='Where to store the logtail state file.  Default location %s' % state_dir)
