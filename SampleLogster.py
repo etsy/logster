@@ -8,17 +8,17 @@
 ###  Copyright 2011, Etsy, Inc.
 ###
 ###  This file is part of Logster.
-###  
+###
 ###  Logster is free software: you can redistribute it and/or modify
 ###  it under the terms of the GNU General Public License as published by
 ###  the Free Software Foundation, either version 3 of the License, or
 ###  (at your option) any later version.
-###  
+###
 ###  Logster is distributed in the hope that it will be useful,
 ###  but WITHOUT ANY WARRANTY; without even the implied warranty of
 ###  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 ###  GNU General Public License for more details.
-###  
+###
 ###  You should have received a copy of the GNU General Public License
 ###  along with Logster. If not, see <http://www.gnu.org/licenses/>.
 ###
@@ -26,19 +26,19 @@
 import time
 import re
 
-from logster_helper import GraphiteMetricObject, GraphiteLogster
+from logster_helper import MetricObject, LogsterParser
 from logster_helper import LogsterParsingException
 
-class SampleGraphiteLogster(GraphiteLogster):
+class SampleLogster(LogsterParser):
 
     def __init__(self):
         '''Initialize any data structures or variables needed for keeping track
         of the tasty bits we find in the log we are parsing.'''
-        self.http_1xx = 0;
-        self.http_2xx = 0;
-        self.http_3xx = 0;
-        self.http_4xx = 0;
-        self.http_5xx = 0;
+        self.http_1xx = 0
+        self.http_2xx = 0
+        self.http_3xx = 0
+        self.http_4xx = 0
+        self.http_5xx = 0
         
         # Regular expression for matching lines we are interested in, and capturing
         # fields from the line (in this case, http_status_code).
@@ -82,10 +82,9 @@ class SampleGraphiteLogster(GraphiteLogster):
 
         # Return a list of metrics objects
         return [
-            GraphiteMetricObject("http_1xx", (self.http_1xx / self.duration)),
-            GraphiteMetricObject("http_2xx", (self.http_2xx / self.duration)),
-            GraphiteMetricObject("http_3xx", (self.http_3xx / self.duration)),
-            GraphiteMetricObject("http_4xx", (self.http_4xx / self.duration)),
-            GraphiteMetricObject("http_5xx", (self.http_5xx / self.duration)),
+            MetricObject("http_1xx", (self.http_1xx / self.duration), "Responses per sec"),
+            MetricObject("http_2xx", (self.http_2xx / self.duration), "Responses per sec"),
+            MetricObject("http_3xx", (self.http_3xx / self.duration), "Responses per sec"),
+            MetricObject("http_4xx", (self.http_4xx / self.duration), "Responses per sec"),
+            MetricObject("http_5xx", (self.http_5xx / self.duration), "Responses per sec"),
         ]
-

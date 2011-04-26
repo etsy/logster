@@ -21,25 +21,25 @@
 
 from time import time
 
-class GangliaLogster(object):
-    pass
-
-class GraphiteLogster(object):
-    pass
-
-class GangliaMetricObject(object):
-    def __init__(self, name, value, units='', type='float', tmax=60):
+class MetricObject(object):
+    """General representation of a metric that can be used in many contexts"""
+    def __init__(self, name, value, units='', metric_type='float'):
         self.name = name
         self.value = value
         self.units = units
-        self.type = type
-        self.tmax = tmax
-
-class GraphiteMetricObject(object):
-    def __init__(self, name, value):
-        self.name = name
-        self.value = value
+        self.metric_type = metric_type
         self.timestamp = int(time())
+
+class LogsterParser(object):
+    """Base class for logster parsers"""
+    def parse_line(self, line):
+        """Take a line and do any parsing we need to do. Required for parsers"""
+        raise RuntimeError, "Implement me!"
+
+    def get_state(self, duration):
+        """Run any calculations needed and return list of metric objects"""
+        raise RuntimeError, "Implement me!"
+
 
 class LogsterParsingException(Exception):
     """Raise this exception if the parse_line function wants to
