@@ -34,11 +34,11 @@ class SampleGraphiteLogster(GraphiteLogster):
     def __init__(self):
         '''Initialize any data structures or variables needed for keeping track
         of the tasty bits we find in the log we are parsing.'''
-        self.http_1xx = 0;
-        self.http_2xx = 0;
-        self.http_3xx = 0;
-        self.http_4xx = 0;
-        self.http_5xx = 0;
+        self.http_1xx = 0
+        self.http_2xx = 0
+        self.http_3xx = 0
+        self.http_4xx = 0
+        self.http_5xx = 0
         
         # Regular expression for matching lines we are interested in, and capturing
         # fields from the line (in this case, http_status_code).
