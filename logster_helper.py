@@ -23,11 +23,11 @@ from time import time
 
 class MetricObject(object):
     """General representation of a metric that can be used in many contexts"""
-    def __init__(self, name, value, units='', metric_type='float'):
+    def __init__(self, name, value, units='', type='float'):
         self.name = name
         self.value = value
         self.units = units
-        self.metric_type = metric_type
+        self.type = type
         self.timestamp = int(time())
 
 class LogsterParser(object):

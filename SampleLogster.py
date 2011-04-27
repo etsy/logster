@@ -2,7 +2,7 @@
 ###  of response codes found in an Apache access log.
 ###
 ###  For example:
-###  sudo ./logster --dry-run SampleGraphiteLogster /var/log/httpd/access_log
+###  sudo ./logster --dry-run --output=ganglia SampleLogster /var/log/httpd/access_log
 ###
 ###
 ###  Copyright 2011, Etsy, Inc.

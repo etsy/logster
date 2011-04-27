@@ -29,9 +29,9 @@ Usage
 
 You can test logster from the command line. There are two sample parsers (SampleGangliaLogster and SampleGraphiteLogster) that can be used to generate stats from an Apache access log. The --dry-run option will allow you to see the metrics being generated on stdout rather than sending them to either Ganglia or Graphite.
 
-  $ sudo /usr/sbin/logster --dry-run SampleGangliaLogster /var/log/httpd/access_log
+  $ sudo /usr/sbin/logster --dry-run --output=ganglia SampleLogster /var/log/httpd/access_log
 
-  $ sudo /usr/sbin/logster --dry-run SampleGraphiteLogster /var/log/httpd/access_log
+  $ sudo /usr/sbin/logster --dry-run --output=graphite --graphite-host=graphite.example.com:2003 SampleLogster /var/log/httpd/access_log
 
 Additional usage details can be found with the -h option:
 
@@ -40,6 +40,8 @@ usage: logster [options] parser logfile
 
 Tail a log file and filter each line to generate metrics that can be sent to
 common monitoring packages.
+
+usage: logster [options] parser logfile
 
 options:
   -h, --help            show this help message and exit
@@ -57,5 +59,9 @@ options:
   -s STATE_DIR, --state-dir=STATE_DIR
                         Where to store the logtail state file.  Default
                         location /var/run
+  -o OUTPUT, --output=OUTPUT
+                        Where to send metrics (can specify multiple times).
+                        Choices are 'graphite', 'ganglia', or 'stdout'.
   -d, --dry-run         Parse the log file but send stats to standard output.
   -D, --debug           Provide more verbose logging for debugging.
+
