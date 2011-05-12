@@ -3,4 +3,4 @@ install:
 	/bin/mkdir -p /var/log/logster
 	/usr/bin/install -m 0755 -t /usr/sbin logster
 	/usr/bin/install -m 0644 -t /usr/share/logster logster_helper.py
-	/usr/bin/install -m 0644 -t /usr/share/logster SampleLogster.py
+	/usr/bin/install -m 0644 -t /usr/share/logster parsers/*
