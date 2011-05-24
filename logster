@@ -49,6 +49,7 @@ import stat
 import logging.handlers
 import fcntl
 import socket 
+import traceback
 
 from time import time
 from math import floor
@@ -299,6 +300,7 @@ def main():
 
     except Exception, e:
         print "Exception caught at %s: %s" % (lineno(), e)
+        traceback.print_exc()
         end_locking(lockfile, logtail_lock_file)
         sys.exit(1)
 
