@@ -71,8 +71,12 @@ cmdline = optparse.OptionParser(usage="usage: %prog [options] parser logfile",
 cmdline.add_option('--metric-prefix', '-p', action='store',
                     help='Add prefix to all published metrics. This is for people that may multiple instances of same service on same host.',
                     default='')
+cmdline.add_option('--parser-help', action='store_true', 
+                    help='Print usage and options for the selected parser')
+cmdline.add_option('--parser-options', action='store', 
+                    help='Options to pass to the logster parser such as "-o VALUE --option2 VALUE". These are parser-specific and passed directly to the parser.')
 cmdline.add_option('--gmetric-options', action='store',
-                    help='Options to pass to gmetric such as -d 180 -c /etc/ganglia/gmond.conf (default). These are passed directly to gmetric.',
+                    help='Options to pass to gmetric such as "-d 180 -c /etc/ganglia/gmond.conf" (default). These are passed directly to gmetric.',
                     default='-d 180 -c /etc/ganglia/gmond.conf')
 cmdline.add_option('--graphite-host', action='store',
                     help='Hostname and port for Graphite collector, e.g. graphite.example.com:2003')
@@ -86,6 +90,9 @@ cmdline.add_option('--dry-run', '-d', action='store_true', default=False,
 cmdline.add_option('--debug', '-D', action='store_true', default=False,
                     help='Provide more verbose logging for debugging.')
 options, arguments = cmdline.parse_args()
+
+if options.parser_help:
+    options.parser_options = '-h'
 
 if (len(arguments) != 2):
     cmdline.print_help()
@@ -234,7 +241,7 @@ def main():
     try:
         #sys.path.append("/usr/local/share/logster")
         module = __import__(class_name)
-        parser = getattr(module, class_name)()
+        parser = getattr(module, class_name)(option_string=options.parser_options)
     except Exception, e:
         print "Failed to instantiate parser (line %s): %s" % (lineno(), e)
         sys.exit(1)

@@ -27,7 +27,7 @@ Once you have logtail installed, then the only other thing you need to do is run
 
 Usage
 
-You can test logster from the command line. There are two sample parsers (SampleGangliaLogster and SampleGraphiteLogster) that can be used to generate stats from an Apache access log. The --dry-run option will allow you to see the metrics being generated on stdout rather than sending them to either Ganglia or Graphite.
+You can test logster from the command line. There are two sample parsers: SampleLogster, which generates stats from an Apache access log; and Log4jLogster, which generates stats from a log4j log. The --dry-run option will allow you to see the metrics being generated on stdout rather than sending them to either Ganglia or Graphite.
 
   $ sudo /usr/sbin/logster --dry-run --output=ganglia SampleLogster /var/log/httpd/access_log
 
@@ -41,17 +41,25 @@ usage: logster [options] parser logfile
 Tail a log file and filter each line to generate metrics that can be sent to
 common monitoring packages.
 
-usage: logster [options] parser logfile
+Usage: logster [options] parser logfile
 
-options:
+Tail a log file and filter each line to generate metrics that can be sent to
+common monitoring packages.
+
+Options:
   -h, --help            show this help message and exit
   -p METRIC_PREFIX, --metric-prefix=METRIC_PREFIX
                         Add prefix to all published metrics. This is for
                         people that may multiple instances of same service on
                         same host.
+  --parser-help         Print usage and options for the selected parser
+  --parser-options=PARSER_OPTIONS
+                        Options to pass to the logster parser such as "-o
+                        VALUE --option2 VALUE". These are parser-specific and
+                        passed directly to the parser.
   --gmetric-options=GMETRIC_OPTIONS
-                        Options to pass to gmetric such as -d 180 -c
-                        /etc/ganglia/gmond.conf (default). These are passed
+                        Options to pass to gmetric such as "-d 180 -c
+                        /etc/ganglia/gmond.conf" (default). These are passed
                         directly to gmetric.
   --graphite-host=GRAPHITE_HOST
                         Hostname and port for Graphite collector, e.g.
@@ -64,4 +72,3 @@ options:
                         Choices are 'graphite', 'ganglia', or 'stdout'.
   -d, --dry-run         Parse the log file but send stats to standard output.
   -D, --debug           Provide more verbose logging for debugging.
-
