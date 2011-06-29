@@ -31,7 +31,7 @@ from logster_helper import LogsterParsingException
 
 class SampleLogster(LogsterParser):
 
-    def __init__(self):
+    def __init__(self, option_string=None):
         '''Initialize any data structures or variables needed for keeping track
         of the tasty bits we find in the log we are parsing.'''
         self.http_1xx = 0
