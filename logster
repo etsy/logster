@@ -240,7 +240,6 @@ def main():
 
     # Import and instantiate the class from the module passed in.  Files and Class names must be the same.
     try:
-        #sys.path.append("/usr/local/share/logster")
         module = __import__(class_name)
         parser = getattr(module, class_name)(option_string=options.parser_options)
     except Exception, e:
