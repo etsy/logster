@@ -41,6 +41,7 @@
 ###    http://www.gnu.org/licenses/gpl.txt
 ###
 
+import subprocess
 import os
 import sys
 import re 
@@ -271,7 +272,7 @@ def main():
 
         except OSError, e:
             logger.info('Writing new state file and exiting. (Was either first run, or state file went missing.)')
-            input = os.popen(shell_tail)
+            input = subprocess.Popen(shell_tail, shell=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE).stdout
             retval = input.close()
             if (retval != 256):
                 logger.warning('%s returned bad exit code %s' % (shell_tail, retval))
@@ -279,7 +280,7 @@ def main():
             sys.exit(0)
 
         # Open a pipe to read input from logtail.
-        input = os.popen(shell_tail)
+        input = subprocess.Popen(shell_tail, shell=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE).stdout
 
     except SystemExit, e:
         raise
