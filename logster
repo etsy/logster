@@ -72,6 +72,8 @@ cmdline = optparse.OptionParser(usage="usage: %prog [options] parser logfile",
 cmdline.add_option('--metric-prefix', '-p', action='store',
                     help='Add prefix to all published metrics. This is for people that may multiple instances of same service on same host.',
                     default='')
+cmdline.add_option('--multiline', action='store_true',default=False,
+                    help='Make logster multiline compatible by calling parse_multiline to actually define what a line is and so allow multiline records')
 cmdline.add_option('--parser-help', action='store_true', 
                     help='Print usage and options for the selected parser')
 cmdline.add_option('--parser-options', action='store', 
@@ -294,7 +296,13 @@ def main():
 
     # Parse each line from input, then send all stats to their collectors.
     try:
-        for line in input:
+        if (options.multiline):
+            logger.debug("Multiline Parser Enabled")
+            lineseries = parser.parse_multiline(input)
+        else:
+            lineseries = re.findall('(.*)\n', input.read())
+            
+        for line in lineseries:
             try:
                 parser.parse_line(line)
             except LogsterParsingException, e:
