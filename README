@@ -14,13 +14,13 @@ Installation
 
 Logster depends on the "logtail" utility that can be obtained from the logcheck package, either from a Debian package manager or from source:
 
-  http://packages.debian.org/source/sid/logcheck.
+  http://packages.debian.org/source/sid/logcheck
 
-An RPM for logtail can be found here:
+RPMs for logcheck can be found here:
 
-  http://rpmfind.net/linux/RPM/epel/testing/5/x86_64/logcheck-1.3.13-3.el5.noarch.html
+  http://rpmfind.net/linux/rpm2html/search.php?query=logcheck
 
-Once you have logtail installed, then the only other thing you need to do is run the installation commands in the Makefile:
+Once you have logtail installed via the logcheck package, you make want to look over the actual logster script itself to adjust any paths necessary. Then the only other thing you need to do is run the installation commands in the Makefile:
 
   $ sudo make install
 
@@ -37,11 +37,6 @@ Additional usage details can be found with the -h option:
 
 $ ./logster -h
 usage: logster [options] parser logfile
-
-Tail a log file and filter each line to generate metrics that can be sent to
-common monitoring packages.
-
-Usage: logster [options] parser logfile
 
 Tail a log file and filter each line to generate metrics that can be sent to
 common monitoring packages.
