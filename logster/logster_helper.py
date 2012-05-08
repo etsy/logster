@@ -49,7 +49,5 @@ class LogsterParsingException(Exception):
 
 class LockingError(Exception):
     """ Exception raised for errors creating or destroying lockfiles. """
-    def __init__(self, message):
-        self.message = message
-
+    pass
 
