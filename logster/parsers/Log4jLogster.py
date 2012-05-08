@@ -29,8 +29,8 @@ import time
 import re
 import optparse
 
-from logster_helper import MetricObject, LogsterParser
-from logster_helper import LogsterParsingException
+from logster.logster_helper import MetricObject, LogsterParser
+from logster.logster_helper import LogsterParsingException
 
 class Log4jLogster(LogsterParser):
     
