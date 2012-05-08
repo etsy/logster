@@ -55,8 +55,7 @@ from time import time
 from math import floor
 
 # Local dependencies
-sys.path.append("/usr/share/logster")
-from logster_helper import LogsterParsingException, LockingError
+from logster.logster_helper import LogsterParsingException, LockingError
 
 # Globals
 gmetric = "/usr/bin/gmetric"
