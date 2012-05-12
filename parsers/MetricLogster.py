@@ -44,11 +44,6 @@ class MetricLogster(LogsterParser):
         self.counts = {}
         self.times = {}
         
-        # General regular expressions, expecting the metric name to be included in the log file.
-
-        self.count_reg = re.compile('.*METRIC_COUNT\smetric=(?P<count_name>[^\s]+)\s+value=(?P<count_value>[0-9.]+)[^0-9.].*')
-        self.time_reg = re.compile('.*METRIC_TIME\smetric=(?P<time_name>[^\s]+)\s+value=(?P<time_value>[0-9.]+)[^0-9.].*')
-        
         if option_string:
             options = option_string.split(' ')
         else:
@@ -57,10 +52,18 @@ class MetricLogster(LogsterParser):
         optparser = optparse.OptionParser()
         optparser.add_option('--percentiles', '-p', dest='percentiles', default='90',
                             help='Comma-separated list of percentiles to track: (default: "90")')
+        optparser.add_option('--time-unit', '-t', dest='time_unit', default='ms',
+                            help='The units of time to look for and record (default: "ms")')
         
         opts, args = optparser.parse_args(args=options)
-            
+        
         self.percentiles = opts.percentiles.split(',')
+        self.time_unit = opts.time_unit
+        
+        # General regular expressions, expecting the metric name to be included in the log file.
+
+        self.count_reg = re.compile('.*METRIC_COUNT\smetric=(?P<count_name>[^\s]+)\s+value=(?P<count_value>[0-9.]+)[^0-9.].*')
+        self.time_reg = re.compile('.*METRIC_TIME\smetric=(?P<time_name>[^\s]+)\s+value=(?P<time_value>[0-9.]+)[^0-9.].*')
         
     def parse_line(self, line):
         '''This function should digest the contents of one line at a time, updating
@@ -92,8 +95,8 @@ class MetricLogster(LogsterParser):
         if duration > 0:
             metrics += [MetricObject(counter, self.counts[counter]/duration) for counter in self.counts]
         for time_name in self.times:
-            metrics.append(MetricObject(time_name+".mean", stats_helper.find_mean(self.times[time_name])))
-            metrics.append(MetricObject(time_name+".median", stats_helper.find_median(self.times[time_name])))
-            metrics += [MetricObject("%s.%sth_percentile" % (time_name,percentile), stats_helper.find_percentile(self.times[time_name],int(percentile)),"ms") for percentile in self.percentiles]
+            metrics.append(MetricObject(time_name+".mean", stats_helper.find_mean(self.times[time_name]), self.time_unit))
+            metrics.append(MetricObject(time_name+".median", stats_helper.find_median(self.times[time_name]), self.time_unit))
+            metrics += [MetricObject("%s.%sth_percentile" % (time_name,percentile), stats_helper.find_percentile(self.times[time_name],int(percentile)), self.time_unit) for percentile in self.percentiles]
                 
         return metrics
