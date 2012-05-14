@@ -22,6 +22,10 @@
 ###    some.metric.time.mean 13.6666666667
 ###    some.metric.time.median 11
 ###    some.metric.time.90th_percentile 18.2
+###  
+###  If the metric is a time the parser will extract the unit from the fist line it encounters for each run.
+###  This means it is important for the logger to be consistent with its units.
+###  Note: units are irrelevant for Graphite, as it does not support them; this functionality is to cater for Ganglia.
 ###
 ###  For example:
 ###  sudo ./logster --output=stdout MetricLogster /var/log/example_app/app.log --parser-options '--percentiles 25,75,90'
@@ -51,42 +55,36 @@ class MetricLogster(LogsterParser):
         
         optparser = optparse.OptionParser()
         optparser.add_option('--percentiles', '-p', dest='percentiles', default='90',
-                            help='Comma-separated list of percentiles to track: (default: "90")')
-        optparser.add_option('--time-unit', '-t', dest='time_unit', default='ms',
-                            help='The units of time to look for and record (default: "ms")')
+                            help='Comma-separated list of integer percentiles to track: (default: "90")')
         
         opts, args = optparser.parse_args(args=options)
         
         self.percentiles = opts.percentiles.split(',')
-        self.time_unit = opts.time_unit
         
         # General regular expressions, expecting the metric name to be included in the log file.
 
         self.count_reg = re.compile('.*METRIC_COUNT\smetric=(?P<count_name>[^\s]+)\s+value=(?P<count_value>[0-9.]+)[^0-9.].*')
-        self.time_reg = re.compile('.*METRIC_TIME\smetric=(?P<time_name>[^\s]+)\s+value=(?P<time_value>[0-9.]+)[^0-9.].*')
+        self.time_reg = re.compile('.*METRIC_TIME\smetric=(?P<time_name>[^\s]+)\s+value=(?P<time_value>[0-9.]+)\s*(?P<time_unit>[^\s$]*).*')
         
     def parse_line(self, line):
         '''This function should digest the contents of one line at a time, updating
         object's state variables. Takes a single argument, the line to be parsed.'''
         
-        try:
-            count_match = self.count_reg.match(line)
-            if count_match:
-                countbits = count_match.groupdict()
-                count_name = countbits['count_name']
-                if not self.counts.has_key(count_name):
-                    self.counts[count_name] = 0
-                self.counts[count_name] += float(countbits['count_value']);
-            
-            time_match = self.time_reg.match(line)
-            if time_match:
-                time_name = time_match.groupdict()['time_name']
-                if not self.times.has_key(time_name):
-                    self.times[time_name] = [];
-                self.times[time_name].append(int(time_match.groupdict()['time_value']))
-            
-        except Exception, e:
-            raise LogsterParsingException, "regmatch or contents failed with %s" % e
+        count_match = self.count_reg.match(line)
+        if count_match:
+            countbits = count_match.groupdict()
+            count_name = countbits['count_name']
+            if not self.counts.has_key(count_name):
+                self.counts[count_name] = 0
+            self.counts[count_name] += float(countbits['count_value']);
+        
+        time_match = self.time_reg.match(line)
+        if time_match:
+            time_name = time_match.groupdict()['time_name']
+            if not self.times.has_key(time_name):
+                unit = time_match.groupdict()['time_unit']
+                self.times[time_name] = {'unit': unit, 'values': []};
+            self.times[time_name]['values'].append(float(time_match.groupdict()['time_value']))
             
     def get_state(self, duration):
         '''Run any necessary calculations on the data collected from the logs
@@ -95,8 +93,10 @@ class MetricLogster(LogsterParser):
         if duration > 0:
             metrics += [MetricObject(counter, self.counts[counter]/duration) for counter in self.counts]
         for time_name in self.times:
-            metrics.append(MetricObject(time_name+".mean", stats_helper.find_mean(self.times[time_name]), self.time_unit))
-            metrics.append(MetricObject(time_name+".median", stats_helper.find_median(self.times[time_name]), self.time_unit))
-            metrics += [MetricObject("%s.%sth_percentile" % (time_name,percentile), stats_helper.find_percentile(self.times[time_name],int(percentile)), self.time_unit) for percentile in self.percentiles]
+            values = self.times[time_name]['values']
+            unit = self.times[time_name]['unit']
+            metrics.append(MetricObject(time_name+'.mean', stats_helper.find_mean(values), unit))
+            metrics.append(MetricObject(time_name+'.median', stats_helper.find_median(values), unit))
+            metrics += [MetricObject('%s.%sth_percentile' % (time_name,percentile), stats_helper.find_percentile(values,int(percentile)), unit) for percentile in self.percentiles]
                 
         return metrics
