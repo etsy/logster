@@ -64,13 +64,13 @@ class ErrorLogLogster(LogsterParser):
     def get_state(self, duration):
         '''Run any necessary calculations on the data collected from the logs
         and return a list of metric objects.'''
-        self.duration = duration
+        self.duration = duration / 10
 
         # Return a list of metrics objects
         return [
-            MetricObject("notice", (self.notice / self.duration), "Logs per sec"),
-            MetricObject("warn", (self.warn / self.duration), "Logs per sec"),
-            MetricObject("error", (self.error / self.duration), "Logs per sec"),
-            MetricObject("crit", (self.crit / self.duration), "Logs per sec"),
-            MetricObject("other", (self.other / self.duration), "Logs per sec"),
+            MetricObject("notice", (self.notice / self.duration), "Logs per 10 sec"),
+            MetricObject("warn", (self.warn / self.duration), "Logs per 10 sec"),
+            MetricObject("error", (self.error / self.duration), "Logs per 10 sec"),
+            MetricObject("crit", (self.crit / self.duration), "Logs per 10 sec"),
+            MetricObject("other", (self.other / self.duration), "Logs per 10 sec"),
         ]
