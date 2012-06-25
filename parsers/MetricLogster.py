@@ -75,7 +75,7 @@ class MetricLogster(LogsterParser):
             countbits = count_match.groupdict()
             count_name = countbits['count_name']
             if not self.counts.has_key(count_name):
-                self.counts[count_name] = 0
+                self.counts[count_name] = 0.0
             self.counts[count_name] += float(countbits['count_value']);
         
         time_match = self.time_reg.match(line)
