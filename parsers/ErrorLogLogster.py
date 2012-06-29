@@ -5,9 +5,6 @@
 ###  sudo ./logster --dry-run --output=ganglia ErrorLogLogster /var/log/httpd/error_log
 ###
 ###
-###  Copyright 2012, LAN.com
-###
-###
 
 import time
 import re
