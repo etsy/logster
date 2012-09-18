@@ -1,11 +1,11 @@
 ###  A sample logster parser file that can be used to count the number
-###  of responses and object size in teh squid log
+###  of responses and object size in the squid access.log
 ###
 ###  For example:
 ###  sudo ./logster --dry-run --output=ganglia SquidLogster /var/log/squid/access.log
 ###
 ###
-###  Copyright 2011, Etsy, Inc
+###  Copyright 2011, Etsy, Inc.
 ###
 ###  This file is part of Logster.
 ###
@@ -50,7 +50,7 @@ class SquidLogster(LogsterParser):
 
         # Regular expression for matching lines we are interested in, and capturing
         # fields from the line (in this case, http_status_code, size and squid_code).
-        self.reg = re.compile('^[0-9.]+ +(?P<size>[0-9]+) .*(?P<squid_code>(TCP|UDP|NONE)_[A-Z]+)/(?P<http_status_code>\d{3}) .*')
+        self.reg = re.compile('^[0-9.]+ +(?P<size>[0-9]+) .*(?P<squid_code>(TCP|UDP|NONE)_[A-Z_]+)/(?P<http_status_code>\d{3}) .*')
 
 
     def parse_line(self, line):
