@@ -55,8 +55,7 @@ from time import time
 from math import floor
 
 # Local dependencies
-sys.path.append("/usr/share/logster")
-from logster_helper import LogsterParsingException, LockingError
+from logster.logster_helper import LogsterParsingException, LockingError
 
 # Globals
 gmetric = "/usr/bin/gmetric"
@@ -251,12 +250,8 @@ def main():
     logger.debug("Using state file %s" % logtail_state_file)
 
     # Import and instantiate the class from the module passed in.  Files and Class names must be the same.
-    try:
-        module = __import__(class_name)
-        parser = getattr(module, class_name)(option_string=options.parser_options)
-    except Exception, e:
-        print "Failed to instantiate parser (line %s): %s" % (lineno(), e)
-        sys.exit(1)
+    module = __import__('logster.parsers.' + class_name, fromlist=[class_name])
+    parser = getattr(module, class_name)(option_string=options.parser_options)
 
     # Check for lock file so we don't run multiple copies of the same parser 
     # simultaneuosly. This will happen if the log parsing takes more time than

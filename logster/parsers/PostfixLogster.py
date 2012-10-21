@@ -22,8 +22,8 @@
 import time
 import re
         
-from logster_helper import MetricObject, LogsterParser
-from logster_helper import LogsterParsingException
+from logster.logster_helper import MetricObject, LogsterParser
+from logster.logster_helper import LogsterParsingException
         
 class PostfixLogster(LogsterParser):
         
