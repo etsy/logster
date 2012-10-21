@@ -74,6 +74,9 @@ cmdline.add_option('--logtail', action='store', default=logtail,
 cmdline.add_option('--metric-prefix', '-p', action='store',
                     help='Add prefix to all published metrics. This is for people that may multiple instances of same service on same host.',
                     default='')
+cmdline.add_option('--metric-suffix', '-x', action='store',
+                    help='Add suffix to all published metrics. This is for people that may add suffix at the end of their metrics.',
+                    default=None)
 cmdline.add_option('--parser-help', action='store_true', 
                     help='Print usage and options for the selected parser')
 cmdline.add_option('--parser-options', action='store', 
@@ -152,6 +155,8 @@ def submit_stdout(metrics, options):
     for metric in metrics:
         if (options.metric_prefix != ""):
             metric.name = options.metric_prefix + "_" + metric.name
+        if (options.metric_suffix is not None):
+            metric.name = metric.name + "_" + options.metric_suffix
         print "%s %s" %(metric.name, metric.value)
 
 def submit_ganglia(metrics, options):
@@ -159,6 +164,8 @@ def submit_ganglia(metrics, options):
 
         if (options.metric_prefix != ""):
             metric.name = options.metric_prefix + "_" + metric.name
+        if (options.metric_suffix is not None):
+            metric.name = metric.name + "_" + options.metric_suffix
 
         gmetric_cmd = "%s %s --name %s --value %s --type %s --units \"%s\"" % (
             gmetric, options.gmetric_options, metric.name, metric.value, metric.type, metric.units)
@@ -183,6 +190,8 @@ def submit_graphite(metrics, options):
 
         if (options.metric_prefix != ""):
             metric.name = options.metric_prefix + "." + metric.name
+        if (options.metric_suffix is not None):
+            metric.name = metric.name + "." + options.metric_suffix
 
         metric_string = "%s %s %s" % (metric.name, metric.value, metric.timestamp)
         logger.debug("Submitting Graphite metric: %s" % metric_string)

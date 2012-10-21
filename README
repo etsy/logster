@@ -47,6 +47,10 @@ Options:
                         Add prefix to all published metrics. This is for
                         people that may multiple instances of same service on
                         same host.
+  -x METRIC_SUFFIX, --metric-suffix=METRIC_PREFIX
+                        Add suffix to all published metrics. This is for
+                        people that may multiple instances of same service on
+                        same host.
   --parser-help         Print usage and options for the selected parser
   --parser-options=PARSER_OPTIONS
                         Options to pass to the logster parser such as "-o
