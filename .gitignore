@@ -3,3 +3,5 @@
 *.state
 *.egg-info
 *.venv
+build
+dist
