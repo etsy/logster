@@ -12,7 +12,10 @@ setup(
     description='Parse log files, generate metrics for Graphite and Ganglia',
     author='Etsy',
     url='https://github.com/etsy/logster',
-    packages=['logster'],
+    packages=[
+        'logster',
+        'logster/parsers'
+    ],
     zip_safe=False,
     scripts=[
         'bin/logster'
