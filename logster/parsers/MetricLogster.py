@@ -35,7 +35,7 @@
 import re
 import optparse
 
-from . import stats_helper
+from logster.parsers import stats_helper
 
 from logster.logster_helper import MetricObject, LogsterParser
 from logster.logster_helper import LogsterParsingException
