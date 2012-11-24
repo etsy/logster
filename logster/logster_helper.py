@@ -23,12 +23,12 @@ from time import time
 
 class MetricObject(object):
     """General representation of a metric that can be used in many contexts"""
-    def __init__(self, name, value, units='', type='float'):
+    def __init__(self, name, value, units='', type='float', timestamp=int(time())):
         self.name = name
         self.value = value
         self.units = units
         self.type = type
-        self.timestamp = int(time())
+        self.timestamp = timestamp
 
 class LogsterParser(object):
     """Base class for logster parsers"""
