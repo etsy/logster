@@ -90,7 +90,7 @@ cmdline.add_option('--state-dir', '-s', action='store', default=state_dir,
 cmdline.add_option('--output', '-o', action='append',
                    choices=('graphite', 'ganglia', 'stdout'),
                    help="Where to send metrics (can specify multiple times). Choices are 'graphite', 'ganglia', or 'stdout'.")
-cmdline.add_option('--stdout-seperator', action='store', default="_",, dest="stdout_seperator",
+cmdline.add_option('--stdout-seperator', action='store', default="_", dest="stdout_seperator",
                     help='Seperator between prefix/suffix and name for stdout. Default is \"%default\"')
 cmdline.add_option('--dry-run', '-d', action='store_true', default=False,
                     help='Parse the log file but send stats to standard output.')
