@@ -90,6 +90,8 @@ cmdline.add_option('--state-dir', '-s', action='store', default=state_dir,
 cmdline.add_option('--output', '-o', action='append',
                    choices=('graphite', 'ganglia', 'stdout'),
                    help="Where to send metrics (can specify multiple times). Choices are 'graphite', 'ganglia', or 'stdout'.")
+cmdline.add_option('--stdout-separator', action='store', default="_", dest="stdout_separator",
+                    help='Seperator between prefix/suffix and name for stdout. Default is \"%default\".')
 cmdline.add_option('--dry-run', '-d', action='store_true', default=False,
                     help='Parse the log file but send stats to standard output.')
 cmdline.add_option('--debug', '-D', action='store_true', default=False,
@@ -153,9 +155,9 @@ def submit_stats(parser, duration, options):
 def submit_stdout(metrics, options):
     for metric in metrics:
         if (options.metric_prefix != ""):
-            metric.name = options.metric_prefix + "_" + metric.name
+            metric.name = options.metric_prefix + options.stdout_separator + metric.name
         if (options.metric_suffix is not None):
-            metric.name = metric.name + "_" + options.metric_suffix
+            metric.name = metric.name + options.stdout_separator + options.metric_suffix
         print "%s %s" %(metric.name, metric.value)
 
 def submit_ganglia(metrics, options):
