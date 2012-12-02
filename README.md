@@ -45,10 +45,10 @@ RPMs for logcheck can be found here:
 
 Once you have logtail installed via the logcheck package, you make want to look
 over the actual logster script itself to adjust any paths necessary. Then the
-only other thing you need to do is run the installation commands in the
-Makefile:
+only other thing you need to do is run the installation commands from the
+`setup.py` file:
 
-    $ sudo make install
+    $ sudo python setup.py install
 
 
 ## Usage
