@@ -252,7 +252,7 @@ def main():
     logger.debug("Using state file %s" % logtail_state_file)
 
     # Import and instantiate the class from the module passed in.  Files and Class names must be the same.
-    module = __import__('logster.parsers.' + class_name, fromlist=[class_name])
+    module = __import__('logster.parsers.' + class_name, globals(), locals(), [class_name])
     parser = getattr(module, class_name)(option_string=options.parser_options)
 
     # Check for lock file so we don't run multiple copies of the same parser 
