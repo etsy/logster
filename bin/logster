@@ -324,9 +324,6 @@ def main():
             # Open a pipe to read input from logtail.
             input = os.popen(shell_tail)
 
-        except SystemExit, e:
-            raise
-
         except Exception, e:
             # note - there is no exception when logtail doesn't exist.
             # I don't know when this exception will ever actually be triggered.
