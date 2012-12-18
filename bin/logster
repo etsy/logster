@@ -63,8 +63,6 @@ logtail = "/usr/sbin/logtail2"
 log_dir = "/var/log/logster"
 state_dir = "/var/run"
 
-script_start_time = time()
-
 # Command-line options and parsing.
 cmdline = optparse.OptionParser(usage="usage: %prog [options] parser logfile",
     description="Tail a log file and filter each line to generate metrics that can be sent to common monitoring packages.")
@@ -242,6 +240,7 @@ def end_locking(lockfile_fd, lockfile_name):
 
 
 def main():
+    script_start_time = time()
 
     dirsafe_logfile = log_file.replace('/','-')
     logtail_state_file = '%s/logtail-%s%s.state' % (state_dir, class_name, dirsafe_logfile)
@@ -338,5 +337,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
