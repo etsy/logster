@@ -41,6 +41,8 @@
 ###    http://www.gnu.org/licenses/gpl.txt
 ###
 
+from __future__ import with_statement
+
 import os
 import sys
 import re
@@ -50,6 +52,7 @@ import logging.handlers
 import fcntl
 import socket
 import traceback
+import contextlib
 
 from time import time
 from math import floor
@@ -252,6 +255,30 @@ def end_locking(lockfile_fd, lockfile_name):
     return
 
 
+@contextlib.contextmanager
+def lock_context(lockfile_name):
+    """
+    Check for lock file so multiple copies of the same parser aren't run
+    simultaneously, as will happen if the log parsing takes more time than the
+    cron period, which is likely on the first run if the logfile is huge.
+    """
+    try:
+        lockfile = start_locking(lockfile_name)
+    except LockingError:
+        logger.warning("Failed to get lock. Is another instance of logster running?")
+        raise SystemExit(1)
+    try:
+        yield lockfile
+    finally:
+        end_locking(lockfile, lockfile_name)
+
+        # try to remove the lockfile one last time, but it's a valid state that it's already been removed.
+        try:
+            end_locking(lockfile, lockfile_name)
+        except Exception:
+            pass
+
+
 def main():
     script_start_time = time()
 
@@ -270,86 +297,68 @@ def main():
     module = __import__('logster.parsers.' + class_name, globals(), locals(), [class_name])
     parser = getattr(module, class_name)(option_string=options.parser_options)
 
-    # Check for lock file so we don't run multiple copies of the same parser
-    # simultaneuosly. This will happen if the log parsing takes more time than
-    # the cron period, which is likely on first run if the logfile is huge.
-    try:
-        lockfile = start_locking(logtail_lock_file)
-    except LockingError, e:
-        logger.warning("Failed to get lock. Is another instance of logster running?")
-        sys.exit(1)
+    with lock_context(logtail_lock_file):
 
-    # Get input to parse.
-    try:
-
-        # Read the age of the state file to see how long it's been since we last
-        # ran. Replace the state file if it has gone missing. While we are her,
-        # touch the state file to reset the time in case logtail doesn't
-        # find any new lines (and thus won't update the statefile).
+        # Get input to parse.
         try:
-            state_file_age = os.stat(logtail_state_file)[stat.ST_MTIME]
 
-            # Calculate now() - state file age to determine check duration.
-            duration = floor(time()) - floor(state_file_age)
-            logger.debug("Setting duration to %s seconds." % duration)
-
-        except OSError, e:
-            logger.info('Writing new state file and exiting. (Was either first run, or state file went missing.)')
-            input = os.popen(shell_tail)
-            retval = input.close()
-            if (retval != 256):
-                logger.warning('%s returned bad exit code %s' % (shell_tail, retval))
-            end_locking(lockfile, logtail_lock_file)
-            sys.exit(0)
-
-        # Open a pipe to read input from logtail.
-        input = os.popen(shell_tail)
-
-    except SystemExit, e:
-        raise
-
-    except Exception, e:
-        # note - there is no exception when logtail doesn't exist.
-        # I don't know when this exception will ever actually be triggered.
-        print ("Failed to run %s to get log data (line %s): %s" %
-               (shell_tail, lineno(), e))
-        end_locking(lockfile, logtail_lock_file)
-        sys.exit(1)
-
-    # Parse each line from input, then send all stats to their collectors.
-    try:
-        for line in input:
+            # Read the age of the state file to see how long it's been since we last
+            # ran. Replace the state file if it has gone missing. While we are her,
+            # touch the state file to reset the time in case logtail doesn't
+            # find any new lines (and thus won't update the statefile).
             try:
-                parser.parse_line(line)
-            except LogsterParsingException, e:
-                # This should only catch recoverable exceptions (of which there
-                # aren't any at the moment).
-                logger.debug("Parsing exception caught at %s: %s" % (lineno(), e))
+                state_file_age = os.stat(logtail_state_file)[stat.ST_MTIME]
 
-        submit_stats(parser, duration, options)
+                # Calculate now() - state file age to determine check duration.
+                duration = floor(time()) - floor(state_file_age)
+                logger.debug("Setting duration to %s seconds." % duration)
 
-    except Exception, e:
-        print "Exception caught at %s: %s" % (lineno(), e)
-        traceback.print_exc()
-        end_locking(lockfile, logtail_lock_file)
-        sys.exit(1)
+            except OSError, e:
+                logger.info('Writing new state file and exiting. (Was either first run, or state file went missing.)')
+                input = os.popen(shell_tail)
+                retval = input.close()
+                if (retval != 256):
+                    logger.warning('%s returned bad exit code %s' % (shell_tail, retval))
+                sys.exit(0)
 
-    # Log the execution time
-    exec_time = round(time() - script_start_time, 1)
-    logger.info("Total execution time: %s seconds." % exec_time)
+            # Open a pipe to read input from logtail.
+            input = os.popen(shell_tail)
 
-    # Set mtime and atime for the state file to the startup time of the script
-    # so that the cron interval is not thrown off by parsing a large number of
-    # log entries.
-    os.utime(logtail_state_file, (floor(script_start_time), floor(script_start_time)))
+        except SystemExit, e:
+            raise
 
-    end_locking(lockfile, logtail_lock_file)
+        except Exception, e:
+            # note - there is no exception when logtail doesn't exist.
+            # I don't know when this exception will ever actually be triggered.
+            print ("Failed to run %s to get log data (line %s): %s" %
+                   (shell_tail, lineno(), e))
+            sys.exit(1)
 
-    # try and remove the lockfile one last time, but it's a valid state that it's already been removed.
-    try:
-        end_locking(lockfile, logtail_lock_file)
-    except Exception, e:
-        pass
+        # Parse each line from input, then send all stats to their collectors.
+        try:
+            for line in input:
+                try:
+                    parser.parse_line(line)
+                except LogsterParsingException, e:
+                    # This should only catch recoverable exceptions (of which there
+                    # aren't any at the moment).
+                    logger.debug("Parsing exception caught at %s: %s" % (lineno(), e))
+
+            submit_stats(parser, duration, options)
+
+        except Exception, e:
+            print "Exception caught at %s: %s" % (lineno(), e)
+            traceback.print_exc()
+            sys.exit(1)
+
+        # Log the execution time
+        exec_time = round(time() - script_start_time, 1)
+        logger.info("Total execution time: %s seconds." % exec_time)
+
+        # Set mtime and atime for the state file to the startup time of the script
+        # so that the cron interval is not thrown off by parsing a large number of
+        # log entries.
+        os.utime(logtail_state_file, (floor(script_start_time), floor(script_start_time)))
 
 if __name__ == '__main__':
     main()
