@@ -188,7 +188,7 @@ def submit_ganglia(metrics, options):
 
 def submit_graphite(metrics, options):
     if (re.match("^[\w\.\-]+\:\d+$", options.graphite_host) == None):
-        raise Exception, "Invalid host:port found for Graphite: '%s'" % options.graphite_host
+        raise Exception("Invalid host:port found for Graphite: '%s'" % options.graphite_host)
 
     if (not options.dry_run):
         host = options.graphite_host.split(':')
@@ -237,12 +237,12 @@ def end_locking(lockfile_fd, lockfile_name):
     """ Release a lock via a provided file descriptor. """
     try:
         fcntl.flock(lockfile_fd, fcntl.LOCK_UN | fcntl.LOCK_NB)
-    except IOError, e:
+    except IOError:
         raise LockingError("Cannot release logster lock (%s)" % lockfile_name)
 
     try:
         os.unlink(lockfile_name)
-    except OSError, e:
+    except OSError:
         raise LockingError("Cannot unlink %s" % lockfile_name)
 
     logger.debug("Unlocking successful")
@@ -257,7 +257,7 @@ def main():
 
     dirsafe_logfile = log_file.replace('/','-')
     logtail_state_file = '%s/logtail-%s%s.state' % (state_dir, class_name, dirsafe_logfile)
-    logtail_lock_file  = '%s/logtail-%s%s.lock' % (state_dir, class_name, dirsafe_logfile)
+    logtail_lock_file = '%s/logtail-%s%s.lock' % (state_dir, class_name, dirsafe_logfile)
     shell_tail = "%s -f %s -o %s" % (logtail, log_file, logtail_state_file)
 
     logger.info("Executing parser %s on logfile %s" % (class_name, log_file))
