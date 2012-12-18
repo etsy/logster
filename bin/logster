@@ -63,71 +63,74 @@ logtail = "/usr/sbin/logtail2"
 log_dir = "/var/log/logster"
 state_dir = "/var/run"
 
-# Command-line options and parsing.
-cmdline = optparse.OptionParser(usage="usage: %prog [options] parser logfile",
-    description="Tail a log file and filter each line to generate metrics that can be sent to common monitoring packages.")
-cmdline.add_option('--logtail', action='store', default=logtail,
-                    help='Specify location of logtail.  Default %s' % logtail)
-cmdline.add_option('--metric-prefix', '-p', action='store',
-                    help='Add prefix to all published metrics. This is for people that may multiple instances of same service on same host.',
-                    default='')
-cmdline.add_option('--metric-suffix', '-x', action='store',
-                    help='Add suffix to all published metrics. This is for people that may add suffix at the end of their metrics.',
-                    default=None)
-cmdline.add_option('--parser-help', action='store_true',
-                    help='Print usage and options for the selected parser')
-cmdline.add_option('--parser-options', action='store',
-                    help='Options to pass to the logster parser such as "-o VALUE --option2 VALUE". These are parser-specific and passed directly to the parser.')
-cmdline.add_option('--gmetric-options', action='store',
-                    help='Options to pass to gmetric such as "-d 180 -c /etc/ganglia/gmond.conf" (default). These are passed directly to gmetric.',
-                    default='-d 180 -c /etc/ganglia/gmond.conf')
-cmdline.add_option('--graphite-host', action='store',
-                    help='Hostname and port for Graphite collector, e.g. graphite.example.com:2003')
-cmdline.add_option('--state-dir', '-s', action='store', default=state_dir,
-                    help='Where to store the logtail state file.  Default location %s' % state_dir)
-cmdline.add_option('--output', '-o', action='append',
-                   choices=('graphite', 'ganglia', 'stdout'),
-                   help="Where to send metrics (can specify multiple times). Choices are 'graphite', 'ganglia', or 'stdout'.")
-cmdline.add_option('--stdout-separator', action='store', default="_", dest="stdout_separator",
-                    help='Seperator between prefix/suffix and name for stdout. Default is \"%default\".')
-cmdline.add_option('--dry-run', '-d', action='store_true', default=False,
-                    help='Parse the log file but send stats to standard output.')
-cmdline.add_option('--debug', '-D', action='store_true', default=False,
-                    help='Provide more verbose logging for debugging.')
-options, arguments = cmdline.parse_args()
-
-if options.parser_help:
-    options.parser_options = '-h'
-
-if (len(arguments) != 2):
-    cmdline.print_help()
-    cmdline.error("Supply at least two arguments: parser and logfile.")
-if not options.output:
-    cmdline.print_help()
-    cmdline.error("Supply where the data should be sent with -o (or --output).")
-if 'graphite' in options.output and not options.graphite_host:
-    cmdline.print_help()
-    cmdline.error("You must supply --graphite-host when using 'graphite' as an output type.")
-
-class_name = arguments[0]
-log_file   = arguments[1]
-state_dir  = options.state_dir
-logtail    = options.logtail
-
-
-# Logging infrastructure for use throughout the script.
-# Uses appending log file, rotated at 100 MB, keeping 5.
-if (not os.path.isdir(log_dir)):
-    os.mkdir(log_dir)
 logger = logging.getLogger('logster')
-formatter = logging.Formatter('%(asctime)s %(levelname)-8s %(message)s')
-hdlr = logging.handlers.RotatingFileHandler('%s/logster.log' % log_dir, 'a', 100 * 1024 * 1024, 5)
-hdlr.setFormatter(formatter)
-logger.addHandler(hdlr)
-logger.setLevel(logging.INFO)
 
-if (options.debug):
-    logger.setLevel(logging.DEBUG)
+def get_args():
+    "Parse command-line options"
+    cmdline = optparse.OptionParser(usage="usage: %prog [options] parser logfile",
+        description="Tail a log file and filter each line to generate metrics that can be sent to common monitoring packages.")
+    cmdline.add_option('--logtail', action='store', default=logtail,
+                        help='Specify location of logtail.  Default %s' % logtail)
+    cmdline.add_option('--metric-prefix', '-p', action='store',
+                        help='Add prefix to all published metrics. This is for people that may multiple instances of same service on same host.',
+                        default='')
+    cmdline.add_option('--metric-suffix', '-x', action='store',
+                        help='Add suffix to all published metrics. This is for people that may add suffix at the end of their metrics.',
+                        default=None)
+    cmdline.add_option('--parser-help', action='store_true',
+                        help='Print usage and options for the selected parser')
+    cmdline.add_option('--parser-options', action='store',
+                        help='Options to pass to the logster parser such as "-o VALUE --option2 VALUE". These are parser-specific and passed directly to the parser.')
+    cmdline.add_option('--gmetric-options', action='store',
+                        help='Options to pass to gmetric such as "-d 180 -c /etc/ganglia/gmond.conf" (default). These are passed directly to gmetric.',
+                        default='-d 180 -c /etc/ganglia/gmond.conf')
+    cmdline.add_option('--graphite-host', action='store',
+                        help='Hostname and port for Graphite collector, e.g. graphite.example.com:2003')
+    cmdline.add_option('--state-dir', '-s', action='store', default=state_dir,
+                        help='Where to store the logtail state file.  Default location %s' % state_dir)
+    cmdline.add_option('--output', '-o', action='append',
+                       choices=('graphite', 'ganglia', 'stdout'),
+                       help="Where to send metrics (can specify multiple times). Choices are 'graphite', 'ganglia', or 'stdout'.")
+    cmdline.add_option('--stdout-separator', action='store', default="_", dest="stdout_separator",
+                        help='Seperator between prefix/suffix and name for stdout. Default is \"%default\".')
+    cmdline.add_option('--dry-run', '-d', action='store_true', default=False,
+                        help='Parse the log file but send stats to standard output.')
+    cmdline.add_option('--debug', '-D', action='store_true', default=False,
+                        help='Provide more verbose logging for debugging.')
+    options, arguments = cmdline.parse_args()
+
+    if options.parser_help:
+        options.parser_options = '-h'
+
+    if (len(arguments) != 2):
+        cmdline.print_help()
+        cmdline.error("Supply at least two arguments: parser and logfile.")
+    if not options.output:
+        cmdline.print_help()
+        cmdline.error("Supply where the data should be sent with -o (or --output).")
+    if 'graphite' in options.output and not options.graphite_host:
+        cmdline.print_help()
+        cmdline.error("You must supply --graphite-host when using 'graphite' as an output type.")
+
+    class_name, log_file = arguments
+    return class_name, log_file, options
+
+
+def setup_logging(debug=False):
+    """
+    Configure the Logging infrastructure for use througout logster
+    Uses appending log file, rotated at 100MB, keeping 5.
+    """
+    if (not os.path.isdir(log_dir)):
+        os.mkdir(log_dir)
+    formatter = logging.Formatter('%(asctime)s %(levelname)-8s %(message)s')
+    hdlr = logging.handlers.RotatingFileHandler('%s/logster.log' % log_dir, 'a', 100 * 1024 * 1024, 5)
+    hdlr.setFormatter(formatter)
+    logger.addHandler(hdlr)
+    logger.setLevel(logging.INFO)
+
+    if debug:
+        logger.setLevel(logging.DEBUG)
 
 
 ## This provides a lineno() function to make it easy to grab the line
@@ -241,6 +244,9 @@ def end_locking(lockfile_fd, lockfile_name):
 
 def main():
     script_start_time = time()
+
+    class_name, log_file, options = get_args()
+    setup_logging(options.debug)
 
     dirsafe_logfile = log_file.replace('/','-')
     logtail_state_file = '%s/logtail-%s%s.state' % (state_dir, class_name, dirsafe_logfile)
