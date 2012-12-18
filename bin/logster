@@ -59,14 +59,17 @@ from logster.logster_helper import LogsterParsingException, LockingError
 
 # Globals
 gmetric = "/usr/bin/gmetric"
-logtail = "/usr/sbin/logtail2"
 log_dir = "/var/log/logster"
-state_dir = "/var/run"
 
 logger = logging.getLogger('logster')
 
 def get_args():
     "Parse command-line options"
+
+    # defaults
+    logtail = "/usr/sbin/logtail2"
+    state_dir = "/var/run"
+
     cmdline = optparse.OptionParser(usage="usage: %prog [options] parser logfile",
         description="Tail a log file and filter each line to generate metrics that can be sent to common monitoring packages.")
     cmdline.add_option('--logtail', action='store', default=logtail,
@@ -249,9 +252,9 @@ def main():
     setup_logging(options.debug)
 
     dirsafe_logfile = log_file.replace('/','-')
-    logtail_state_file = '%s/logtail-%s%s.state' % (state_dir, class_name, dirsafe_logfile)
-    logtail_lock_file  = '%s/logtail-%s%s.lock' % (state_dir, class_name, dirsafe_logfile)
-    shell_tail = "%s -f %s -o %s" % (logtail, log_file, logtail_state_file)
+    logtail_state_file = '%s/logtail-%s%s.state' % (options.state_dir, class_name, dirsafe_logfile)
+    logtail_lock_file  = '%s/logtail-%s%s.lock' % (options.state_dir, class_name, dirsafe_logfile)
+    shell_tail = "%s -f %s -o %s" % (options.logtail, log_file, logtail_state_file)
 
     logger.info("Executing parser %s on logfile %s" % (class_name, log_file))
     logger.debug("Using state file %s" % logtail_state_file)
