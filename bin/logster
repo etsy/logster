@@ -60,7 +60,6 @@ from logster.logster_helper import LogsterParsingException, LockingError
 # Globals
 gmetric = "/usr/bin/gmetric"
 logtail = "/usr/sbin/logtail2"
-log_dir = "/var/log/logster"
 state_dir = "/var/run"
 
 logger = logging.getLogger('logster')
@@ -97,6 +96,8 @@ def get_args():
                         help='Parse the log file but send stats to standard output.')
     cmdline.add_option('--debug', '-D', action='store_true', default=False,
                         help='Provide more verbose logging for debugging.')
+    cmdline.add_option('--log', default="/var/log/logster",
+                       help="directory to which to log (or 'stderr')")
     options, arguments = cmdline.parse_args()
 
     if options.parser_help:
@@ -121,10 +122,16 @@ def setup_logging(options):
     Configure the Logging infrastructure for use througout logster
     Uses appending log file, rotated at 100MB, keeping 5.
     """
-    if (not os.path.isdir(log_dir)):
-        os.mkdir(log_dir)
-    formatter = logging.Formatter('%(asctime)s %(levelname)-8s %(message)s')
-    hdlr = logging.handlers.RotatingFileHandler('%s/logster.log' % log_dir, 'a', 100 * 1024 * 1024, 5)
+    format = '%(levelname)-8s %(message)s'
+    if options.log == 'stderr':
+        hdlr = logging.StreamHandler(sys.stderr)
+    else:
+        format = '%(asctime)s ' + format
+        log_dir = options.log
+        if (not os.path.isdir(log_dir)):
+            os.mkdir(log_dir)
+        hdlr = logging.handlers.RotatingFileHandler('%s/logster.log' % log_dir, 'a', 100 * 1024 * 1024, 5)
+    formatter = logging.Formatter(format)
     hdlr.setFormatter(formatter)
     logger.addHandler(hdlr)
     logger.setLevel(logging.INFO)
