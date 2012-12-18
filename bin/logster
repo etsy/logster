@@ -116,7 +116,7 @@ def get_args():
     return class_name, log_file, options
 
 
-def setup_logging(debug=False):
+def setup_logging(options):
     """
     Configure the Logging infrastructure for use througout logster
     Uses appending log file, rotated at 100MB, keeping 5.
@@ -129,7 +129,7 @@ def setup_logging(debug=False):
     logger.addHandler(hdlr)
     logger.setLevel(logging.INFO)
 
-    if debug:
+    if options.debug:
         logger.setLevel(logging.DEBUG)
 
 
@@ -246,7 +246,7 @@ def main():
     script_start_time = time()
 
     class_name, log_file, options = get_args()
-    setup_logging(options.debug)
+    setup_logging(options)
 
     dirsafe_logfile = log_file.replace('/','-')
     logtail_state_file = '%s/logtail-%s%s.state' % (state_dir, class_name, dirsafe_logfile)
