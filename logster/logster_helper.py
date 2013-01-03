@@ -19,7 +19,6 @@
 ###  along with Logster. If not, see <http://www.gnu.org/licenses/>.
 ###
 
-import os
 import httplib
 import base64
 import hashlib
@@ -67,8 +66,8 @@ class CloudWatch:
         print "instance-id = %s" % instance_id
 
         self.base_url = "monitoring.ap-northeast-1.amazonaws.com"
-        self.key = os.getenv('AWS_ACCESS_KEY_ID', key)
-        self.secret_key = os.getenv('AWS_SECRET_ACCESS_KEY_ID', secret_key)
+        self.key = key
+        self.secret_key = secret_key
         self.params = {'Namespace': 'logster',
        'MetricData.member.1.MetricName': metric.name,
        'MetricData.member.1.Value': metric.value,

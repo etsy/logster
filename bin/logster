@@ -62,8 +62,6 @@ gmetric = "/usr/bin/gmetric"
 logtail = "/usr/sbin/logtail2"
 log_dir = "/var/log/logster"
 state_dir = "/var/run"
-aws_key = ''
-aws_secret_key = ''
 
 script_start_time = time.time()
 
@@ -87,6 +85,10 @@ cmdline.add_option('--gmetric-options', action='store',
                     default='-d 180 -c /etc/ganglia/gmond.conf')
 cmdline.add_option('--graphite-host', action='store',
                     help='Hostname and port for Graphite collector, e.g. graphite.example.com:2003')
+cmdline.add_option('--aws-key', action='store', default=os.getenv('AWS_ACCESS_KEY_ID'),
+                    help='Amazon credential key')
+cmdline.add_option('--aws-secret-key', action='store', default=os.getenv('AWS_SECRET_ACCESS_KEY_ID'),
+                    help='Amazon credential secret key')
 cmdline.add_option('--state-dir', '-s', action='store', default=state_dir,
                     help='Where to store the logtail state file.  Default location %s' % state_dir)
 cmdline.add_option('--output', '-o', action='append',
@@ -112,6 +114,9 @@ if not options.output:
 if 'graphite' in options.output and not options.graphite_host:
     cmdline.print_help()
     cmdline.error("You must supply --graphite-host when using 'graphite' as an output type.")
+if 'cloudwatch' in options.output and not options.aws_key and not options.aws_secret_key:
+    cmdline.print_help()
+    cmdline.error("You must supply --aws-key and --aws-secret-key or Set environment variables. AWS_ACCESS_KEY_ID for --aws-key, AWS_SECRET_ACCESS_KEY_ID for --aws-secret-key")
 
 class_name = arguments[0]
 log_file   = arguments[1]
@@ -223,7 +228,7 @@ def submit_cloudwatch(metrics, options):
         logger.debug("Submitting CloudWatch metric: %s" % metric_string)
 
         if (not options.dry_run):
-            cw = CloudWatch(aws_key, aws_secret_key, metric)
+            cw = CloudWatch(options.aws_key, options.aws_secret_key, metric)
             cw.put_data()
         else:       
             print metric_string
