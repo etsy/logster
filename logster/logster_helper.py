@@ -100,11 +100,7 @@ class CloudWatch:
  
     def put_data(self):
         signedURL = self.get_signed_url()
-        print signedURL
         conn = httplib.HTTPConnection(self.base_url)
         conn.request("GET", signedURL)
         res = conn.getresponse()
-        print res.status, res.reason
-        print res.getheaders()
-        print res.read()
 
