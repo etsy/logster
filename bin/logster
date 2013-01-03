@@ -50,20 +50,22 @@ import logging.handlers
 import fcntl
 import socket 
 import traceback
+import time
 
-from time import time
 from math import floor
 
 # Local dependencies
-from logster.logster_helper import LogsterParsingException, LockingError
+from logster.logster_helper import LogsterParsingException, LockingError, CloudWatch
 
 # Globals
 gmetric = "/usr/bin/gmetric"
 logtail = "/usr/sbin/logtail2"
 log_dir = "/var/log/logster"
 state_dir = "/var/run"
+aws_key = ''
+aws_secret_key = ''
 
-script_start_time = time()
+script_start_time = time.time()
 
 # Command-line options and parsing.
 cmdline = optparse.OptionParser(usage="usage: %prog [options] parser logfile",
@@ -88,8 +90,8 @@ cmdline.add_option('--graphite-host', action='store',
 cmdline.add_option('--state-dir', '-s', action='store', default=state_dir,
                     help='Where to store the logtail state file.  Default location %s' % state_dir)
 cmdline.add_option('--output', '-o', action='append',
-                   choices=('graphite', 'ganglia', 'stdout'),
-                   help="Where to send metrics (can specify multiple times). Choices are 'graphite', 'ganglia', or 'stdout'.")
+                   choices=('graphite', 'ganglia', 'stdout', 'cloudwatch'),
+                   help="Where to send metrics (can specify multiple times). Choices are 'graphite', 'ganglia', 'cloudwatch' or 'stdout'.")
 cmdline.add_option('--stdout-separator', action='store', default="_", dest="stdout_separator",
                     help='Seperator between prefix/suffix and name for stdout. Default is \"%default\".')
 cmdline.add_option('--dry-run', '-d', action='store_true', default=False,
@@ -151,6 +153,8 @@ def submit_stats(parser, duration, options):
         submit_graphite(metrics, options)
     if 'stdout' in options.output:
         submit_stdout(metrics, options)
+    if 'cloudwatch' in options.output:
+        submit_cloudwatch(metrics, options)
 
 def submit_stdout(metrics, options):
     for metric in metrics:
@@ -205,6 +209,24 @@ def submit_graphite(metrics, options):
     if (not options.dry_run):
         s.close()
 
+def submit_cloudwatch(metrics, options):
+    for metric in metrics:
+        
+        if (options.metric_prefix != ""):
+            metric.name = options.metric_prefix + "." + metric.name
+        if (options.metric_suffix is not None):
+            metric.name = metric.name + "." + options.metric_suffix
+        
+        metric.timestamp = time.strftime("%Y%m%dT%H:%M:00Z", time.gmtime(metric.timestamp))
+        metric.units = "None"
+        metric_string = "%s %s %s" % (metric.name, metric.value, metric.timestamp)
+        logger.debug("Submitting CloudWatch metric: %s" % metric_string)
+
+        if (not options.dry_run):
+            cw = CloudWatch(aws_key, aws_secret_key, metric)
+            cw.put_data()
+        else:       
+            print metric_string
 
 def start_locking(lockfile_name):
     """ Acquire a lock via a provided lockfile filename. """
@@ -275,7 +297,7 @@ def main():
             state_file_age = os.stat(logtail_state_file)[stat.ST_MTIME]
 
             # Calculate now() - state file age to determine check duration.
-            duration = floor(time()) - floor(state_file_age)
+            duration = floor(time.time()) - floor(state_file_age)
             logger.debug("Setting duration to %s seconds." % duration)
 
         except OSError, e:
@@ -320,7 +342,7 @@ def main():
         sys.exit(1)
 
     # Log the execution time
-    exec_time = round(time() - script_start_time, 1)
+    exec_time = round(time.time() - script_start_time, 1)
     logger.info("Total execution time: %s seconds." % exec_time)
 
     # Set mtime and atime for the state file to the startup time of the script
