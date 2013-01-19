@@ -50,8 +50,8 @@ import logging.handlers
 import fcntl
 import socket 
 import traceback
-import time
 
+from time import time, strftime, gmtime
 from math import floor
 
 # Local dependencies
@@ -63,7 +63,7 @@ logtail = "/usr/sbin/logtail2"
 log_dir = "/var/log/logster"
 state_dir = "/var/run"
 
-script_start_time = time.time()
+script_start_time = time()
 
 # Command-line options and parsing.
 cmdline = optparse.OptionParser(usage="usage: %prog [options] parser logfile",
@@ -222,7 +222,7 @@ def submit_cloudwatch(metrics, options):
         if (options.metric_suffix is not None):
             metric.name = metric.name + "." + options.metric_suffix
         
-        metric.timestamp = time.strftime("%Y%m%dT%H:%M:00Z", time.gmtime(metric.timestamp))
+        metric.timestamp = strftime("%Y%m%dT%H:%M:00Z", gmtime(metric.timestamp))
         metric.units = "None"
         metric_string = "%s %s %s" % (metric.name, metric.value, metric.timestamp)
         logger.debug("Submitting CloudWatch metric: %s" % metric_string)
@@ -302,7 +302,7 @@ def main():
             state_file_age = os.stat(logtail_state_file)[stat.ST_MTIME]
 
             # Calculate now() - state file age to determine check duration.
-            duration = floor(time.time()) - floor(state_file_age)
+            duration = floor(time()) - floor(state_file_age)
             logger.debug("Setting duration to %s seconds." % duration)
 
         except OSError, e:
@@ -347,7 +347,7 @@ def main():
         sys.exit(1)
 
     # Log the execution time
-    exec_time = round(time.time() - script_start_time, 1)
+    exec_time = round(time() - script_start_time, 1)
     logger.info("Total execution time: %s seconds." % exec_time)
 
     # Set mtime and atime for the state file to the startup time of the script
