@@ -66,32 +66,46 @@ class CloudWatch:
     """ Base class for Amazon CloudWatch """
     def __init__(self, key, secret_key, metric):
         """ Specify Amazon CloudWatch params """
-
-        try:
-            conn = httplib.HTTPConnection("169.254.169.254")
-            conn.request("GET", "/latest/meta-data/instance-id")
-        except Exception, e:
-            raise CloudWatchException("Can't connect Amazon meta data server to get InstanceID : (%s)" % e.message)
-
-        instance_id = conn.getresponse().read()
-
+        
         self.base_url = "monitoring.ap-northeast-1.amazonaws.com"
         self.key = key
         self.secret_key = secret_key
-        self.params = {'Namespace': 'logster',
-       'MetricData.member.1.MetricName': metric.name,
-       'MetricData.member.1.Value': metric.value,
-       'MetricData.member.1.Unit': metric.units,
+        self.metric = metric
+
+    def get_instance_id(self, instance_id = None):
+        """ get instance id from amazon meta data server """
+
+        self.instance_id = instance_id
+
+        if self.instance_id is None: 
+            try:
+                conn = httplib.HTTPConnection("169.254.169.254")
+                conn.request("GET", "/latest/meta-data/instance-id")
+            except Exception, e:
+                raise CloudWatchException("Can't connect Amazon meta data server to get InstanceID : (%s)" % e.message)
+
+            self.instance_id = conn.getresponse().read()
+        
+        return self
+
+    def set_params(self):
+
+        params = {'Namespace': 'logster',
+       'MetricData.member.1.MetricName': self.metric.name,
+       'MetricData.member.1.Value': self.metric.value,
+       'MetricData.member.1.Unit': self.metric.units,
        'MetricData.member.1.Dimensions.member.1.Name': 'InstanceID',
-       'MetricData.member.1.Dimensions.member.1.Value': instance_id}       
+       'MetricData.member.1.Dimensions.member.1.Value': self.instance_id}       
      
-        self.url_params = self.params
+        self.url_params = params
         self.url_params['AWSAccessKeyId'] = self.key
         self.url_params['Action'] = 'PutMetricData'
         self.url_params['SignatureMethod'] = 'HmacSHA256'
         self.url_params['SignatureVersion'] = '2'
         self.url_params['Version'] = '2010-08-01'
-        self.url_params['Timestamp'] = metric.timestamp
+        self.url_params['Timestamp'] = self.metric.timestamp
+
+        return self
     
     def get_signed_url(self):
         """ build signed parameters following
@@ -110,7 +124,7 @@ class CloudWatch:
         return "/?" + url_string
  
     def put_data(self):
-        signedURL = self.get_signed_url()
+        signedURL = self.set_params().get_signed_url()
         try:
             conn = httplib.HTTPConnection(self.base_url)
             conn.request("GET", signedURL)
