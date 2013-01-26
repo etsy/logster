@@ -55,7 +55,7 @@ from time import time, strftime, gmtime
 from math import floor
 
 # Local dependencies
-from logster.logster_helper import LogsterParsingException, LockingError, CloudWatch
+from logster.logster_helper import LogsterParsingException, LockingError, CloudWatch, CloudWatchException
 
 # Globals
 gmetric = "/usr/bin/gmetric"
@@ -228,8 +228,17 @@ def submit_cloudwatch(metrics, options):
         logger.debug("Submitting CloudWatch metric: %s" % metric_string)
 
         if (not options.dry_run):
-            cw = CloudWatch(options.aws_key, options.aws_secret_key, metric)
-            cw.put_data()
+            try:
+                cw = CloudWatch(options.aws_key, options.aws_secret_key, metric)
+            except CloudWatchException, e:
+                logger.debug(e.message + "Is this machine really amazon EC2?")
+                sys.exit(1)
+
+            try:
+                cw.put_data()
+            except CloudWatchException, e:
+                logger.debug(e.message)
+                sys.exit(1)
         else:       
             print metric_string
 
@@ -365,5 +374,4 @@ def main():
 
 if __name__ == '__main__':
     main()
-
 

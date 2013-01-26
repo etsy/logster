@@ -57,13 +57,23 @@ class LockingError(Exception):
     """ Exception raised for errors creating or destroying lockfiles. """
     pass
 
+class CloudWatchException(Exception):
+    """ Raise thie exception if the connection can't be established 
+        with Amazon server """
+    pass
+
 class CloudWatch:
-    """ Specify Amazon CloudWatch params """
+    """ Base class for Amazon CloudWatch """
     def __init__(self, key, secret_key, metric):
-        conn = httplib.HTTPConnection("169.254.169.254")
-        conn.request("GET", "/latest/meta-data/instance-id")
+        """ Specify Amazon CloudWatch params """
+
+        try:
+            conn = httplib.HTTPConnection("169.254.169.254")
+            conn.request("GET", "/latest/meta-data/instance-id")
+        except Exception, e:
+            raise CloudWatchException("Can't connect Amazon meta data server to get InstanceID : (%s)" % e.message)
+
         instance_id = conn.getresponse().read()
-        print "instance-id = %s" % instance_id
 
         self.base_url = "monitoring.ap-northeast-1.amazonaws.com"
         self.key = key
@@ -84,7 +94,8 @@ class CloudWatch:
         self.url_params['Timestamp'] = metric.timestamp
     
     def get_signed_url(self):
-        """ build signed parameters following http://docs.amazonwebservices.com/AmazonCloudWatch/latest/APIReference/API_PutMetricData.html """
+        """ build signed parameters following
+            http://docs.amazonwebservices.com/AmazonCloudWatch/latest/APIReference/API_PutMetricData.html """
         keys = self.url_params.keys()
         keys.sort()
         values = map(self.url_params.get, keys)
@@ -100,7 +111,11 @@ class CloudWatch:
  
     def put_data(self):
         signedURL = self.get_signed_url()
-        conn = httplib.HTTPConnection(self.base_url)
-        conn.request("GET", signedURL)
+        try:
+            conn = httplib.HTTPConnection(self.base_url)
+            conn.request("GET", signedURL)
+        except Exception, e:
+            raise CloudWatchException("Can't connect Amazon CloudWatch server : (%s)" % e.message)
         res = conn.getresponse()
+
 
