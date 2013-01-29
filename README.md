@@ -101,3 +101,6 @@ Additional usage details can be found with the -h option:
                             Choices are 'graphite', 'ganglia', or 'stdout'.
       -d, --dry-run         Parse the log file but send stats to standard output.
       -D, --debug           Provide more verbose logging for debugging.
+      -P PARSER_FILENAME, --parser-filename=PARSER_FILENAME
+                            Parser module filename.
+
