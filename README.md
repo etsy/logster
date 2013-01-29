@@ -63,6 +63,10 @@ to either Ganglia or Graphite.
 
     $ sudo /usr/sbin/logster --dry-run --output=graphite --graphite-host=graphite.example.com:2003 SampleLogster /var/log/httpd/access_log
 
+You can specify a filename to read the parser module from using -P cmdline option
+
+    $ sudo /usr/sbin/logster --dry-run --output=stdout -P /path/to/MyParser.py MyParser /path/to/my.log
+
 Additional usage details can be found with the -h option:
 
     $ ./logster -h
@@ -101,3 +105,6 @@ Additional usage details can be found with the -h option:
                             Choices are 'graphite', 'ganglia', or 'stdout'.
       -d, --dry-run         Parse the log file but send stats to standard output.
       -D, --debug           Provide more verbose logging for debugging.
+      -P PARSER_FILENAME, --parser-filename=PARSER_FILENAME
+                            Parser module filename.
+

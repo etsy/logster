@@ -50,6 +50,7 @@ import logging.handlers
 import fcntl
 import socket 
 import traceback
+import imp
 
 from time import time
 from math import floor
@@ -96,6 +97,8 @@ cmdline.add_option('--dry-run', '-d', action='store_true', default=False,
                     help='Parse the log file but send stats to standard output.')
 cmdline.add_option('--debug', '-D', action='store_true', default=False,
                     help='Provide more verbose logging for debugging.')
+cmdline.add_option('--parser-filename', '-P', action='store', default=None, dest="parser_filename",
+                    help='Parser module filename.')
 options, arguments = cmdline.parse_args()
 
 if options.parser_help:
@@ -252,7 +255,10 @@ def main():
     logger.debug("Using state file %s" % logtail_state_file)
 
     # Import and instantiate the class from the module passed in.  Files and Class names must be the same.
-    module = __import__('logster.parsers.' + class_name, globals(), locals(), [class_name])
+    if options.parser_filename==None:
+        module = __import__('logster.parsers.' + class_name, globals(), locals(), [class_name])
+    else:
+        module = imp.load_source(class_name, options.parser_filename)
     parser = getattr(module, class_name)(option_string=options.parser_options)
 
     # Check for lock file so we don't run multiple copies of the same parser 
