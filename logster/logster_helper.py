@@ -19,12 +19,20 @@
 ###  along with Logster. If not, see <http://www.gnu.org/licenses/>.
 ###
 
-import httplib
+try:
+    from httplib import *
+except ImportError:
+    from http.client import *
+
 import base64
 import hashlib
 import hmac
 
-from urllib import urlencode, quote_plus
+try:
+    from urllib import urlencode, quote_plus
+except ImportError:
+    from urllib.parse import urlencode, quote_plus
+
 from time import time
 
 class MetricObject(object):
@@ -40,11 +48,11 @@ class LogsterParser(object):
     """Base class for logster parsers"""
     def parse_line(self, line):
         """Take a line and do any parsing we need to do. Required for parsers"""
-        raise RuntimeError, "Implement me!"
+        raise RuntimeError("Implement me!")
 
     def get_state(self, duration):
         """Run any calculations needed and return list of metric objects"""
-        raise RuntimeError, "Implement me!"
+        raise RuntimeError("Implement me!")
 
 
 class LogsterParsingException(Exception):
@@ -79,9 +87,9 @@ class CloudWatch:
 
         if self.instance_id is None: 
             try:
-                conn = httplib.HTTPConnection("169.254.169.254")
+                conn = HTTPConnection("169.254.169.254")
                 conn.request("GET", "/latest/meta-data/instance-id")
-            except Exception, e:
+            except Exception as e:
                 raise CloudWatchException("Can't connect Amazon meta data server to get InstanceID : (%s)" % e.message)
 
             self.instance_id = conn.getresponse().read()
@@ -110,13 +118,16 @@ class CloudWatch:
     def get_signed_url(self):
         """ build signed parameters following
             http://docs.amazonwebservices.com/AmazonCloudWatch/latest/APIReference/API_PutMetricData.html """
-        keys = self.url_params.keys()
-        keys.sort()
+        keys = sorted(self.url_params)
         values = map(self.url_params.get, keys)
-        url_string = urlencode(zip(keys,values))   
+        url_string = urlencode(list(zip(keys,values)))
 
         string_to_sign = "GET\n%s\n/\n%s" % (self.base_url, url_string)
-        signature = hmac.new( key=self.secret_key, msg=string_to_sign, digestmod=hashlib.sha256).digest()
+        try:
+            signature = hmac.new( key=bytes(self.secret_key), msg=bytes(string_to_sign), digestmod=hashlib.sha256).digest()
+        except TypeError:
+            signature = hmac.new( key=bytes(self.secret_key, "utf-8"), msg=bytes(string_to_sign, "utf-8"), digestmod=hashlib.sha256).digest()
+
         signature = base64.encodestring(signature).strip()
         urlencoded_signature = quote_plus(signature)
         url_string += "&Signature=%s" % urlencoded_signature
@@ -126,10 +137,10 @@ class CloudWatch:
     def put_data(self):
         signedURL = self.set_params().get_signed_url()
         try:
-            conn = httplib.HTTPConnection(self.base_url)
+            conn = HTTPConnection(self.base_url)
             conn.request("GET", signedURL)
-        except Exception, e:
-            raise CloudWatchException("Can't connect Amazon CloudWatch server : (%s)" % e.message)
+        except Exception as e:
+            raise CloudWatchException("Can't connect Amazon CloudWatch server") 
         res = conn.getresponse()
 
 
