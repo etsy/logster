@@ -112,6 +112,9 @@ if 'graphite' in options.output and not options.graphite_host:
     cmdline.error("You must supply --graphite-host when using 'graphite' as an output type.")
 
 class_name = arguments[0]
+if class_name.find('.') == -1:
+    # If it's a single name, find it in the base logster package
+    class_name = 'logster.parsers.%s.%s' % (class_name, class_name)
 log_file   = arguments[1]
 state_dir  = options.state_dir
 logtail    = options.logtail
@@ -251,9 +254,10 @@ def main():
     logger.info("Executing parser %s on logfile %s" % (class_name, log_file))
     logger.debug("Using state file %s" % logtail_state_file)
 
-    # Import and instantiate the class from the module passed in.  Files and Class names must be the same.
-    module = __import__('logster.parsers.' + class_name, globals(), locals(), [class_name])
-    parser = getattr(module, class_name)(option_string=options.parser_options)
+    # Import and instantiate the class from the module passed in.
+    module_name, parser_name = class_name.rsplit('.', 1)
+    module = __import__(module_name, globals(), locals(), [parser_name])
+    parser = getattr(module, parser_name)(option_string=options.parser_options)
 
     # Check for lock file so we don't run multiple copies of the same parser 
     # simultaneuosly. This will happen if the log parsing takes more time than
