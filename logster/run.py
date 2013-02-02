@@ -336,7 +336,7 @@ def main():
                 duration = floor(time()) - floor(state_file_age)
                 logger.debug("Setting duration to %s seconds." % duration)
 
-            except OSError, e:
+            except OSError:
                 logger.info('Writing new state file and exiting. (Was either first run, or state file went missing.)')
                 input = os.popen(shell_tail)
                 retval = input.close()
@@ -347,7 +347,8 @@ def main():
             # Open a pipe to read input from logtail.
             input = os.popen(shell_tail)
 
-        except Exception, e:
+        except Exception:
+            e = sys.exc_info()[1]
             # note - there is no exception when logtail doesn't exist.
             # I don't know when this exception will ever actually be triggered.
             sys.stdout.write(
@@ -360,14 +361,16 @@ def main():
             for line in input:
                 try:
                     parser.parse_line(line)
-                except LogsterParsingException, e:
+                except LogsterParsingException:
+                    e = sys.exc_info()[1]
                     # This should only catch recoverable exceptions (of which there
                     # aren't any at the moment).
                     logger.debug("Parsing exception caught at %s: %s" % (lineno(), e))
 
             submit_stats(parser, duration, options)
 
-        except Exception, e:
+        except Exception:
+            e = sys.exc_info()[1]
             sys.stdout.write("Exception caught at %s: %s\n" % (lineno(), e))
             traceback.print_exc()
             sys.exit(1)
