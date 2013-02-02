@@ -296,7 +296,7 @@ def load_parser(class_name, *args, **kwargs):
     'logster.parsers.{class_name}'.
     """
     module, sep, class_name = class_name.rpartition(':')
-    module = module or 'logster.parsers.{class_name}'.format(**vars())
+    module = module or 'logster.parsers.%(class_name)s' % vars()
 
     # Import the module and instantiate the indicated class.
     module = import_module(module)
