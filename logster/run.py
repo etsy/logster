@@ -219,7 +219,8 @@ def submit_graphite(metrics, options):
         if (not options.dry_run):
             s.send("%s\n" % metric_string)
         else:
-            print "%s %s" % (options.graphite_host, metric_string)
+            sys.stdout.write("%s %s\n" % (options.graphite_host,
+                metric_string))
 
     if (not options.dry_run):
         s.close()
@@ -349,8 +350,9 @@ def main():
         except Exception, e:
             # note - there is no exception when logtail doesn't exist.
             # I don't know when this exception will ever actually be triggered.
-            print ("Failed to run %s to get log data (line %s): %s" %
-                   (shell_tail, lineno(), e))
+            sys.stdout.write(
+                "Failed to run %s to get log data (line %s): %s\n" %
+                (shell_tail, lineno(), e))
             sys.exit(1)
 
         # Parse each line from input, then send all stats to their collectors.
@@ -366,7 +368,7 @@ def main():
             submit_stats(parser, duration, options)
 
         except Exception, e:
-            print "Exception caught at %s: %s" % (lineno(), e)
+            sys.stdout.write("Exception caught at %s: %s\n" % (lineno(), e))
             traceback.print_exc()
             sys.exit(1)
 
