@@ -7,6 +7,7 @@
 ###
 
 import re
+import sys
 
 from logster.logster_helper import MetricObject, LogsterParser
 from logster.logster_helper import LogsterParsingException
@@ -52,7 +53,8 @@ class ErrorLogLogster(LogsterParser):
             else:
                 raise LogsterParsingException("regmatch failed to match")
 
-        except Exception, e:
+        except Exception:
+            e = sys.exc_info()[1]
             raise LogsterParsingException("regmatch or contents failed with %s" % e)
 
     def get_state(self, duration):
