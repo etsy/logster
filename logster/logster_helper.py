@@ -34,11 +34,11 @@ class LogsterParser(object):
     """Base class for logster parsers"""
     def parse_line(self, line):
         """Take a line and do any parsing we need to do. Required for parsers"""
-        raise RuntimeError, "Implement me!"
+        raise RuntimeError("Implement me!")
 
     def get_state(self, duration):
         """Run any calculations needed and return list of metric objects"""
-        raise RuntimeError, "Implement me!"
+        raise RuntimeError("Implement me!")
 
 
 class LogsterParsingException(Exception):
@@ -50,4 +50,3 @@ class LogsterParsingException(Exception):
 class LockingError(Exception):
     """ Exception raised for errors creating or destroying lockfiles. """
     pass
-
