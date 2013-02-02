@@ -177,7 +177,7 @@ def submit_stdout(metrics, options):
             metric.name = options.metric_prefix + options.stdout_separator + metric.name
         if (options.metric_suffix is not None):
             metric.name = metric.name + options.stdout_separator + options.metric_suffix
-        print "%s %s" %(metric.name, metric.value)
+        sys.stdout.write("%s %s\n" % (metric.name, metric.value))
 
 def submit_ganglia(metrics, options):
     for metric in metrics:
@@ -194,7 +194,7 @@ def submit_ganglia(metrics, options):
         if (not options.dry_run):
             os.system("%s" % gmetric_cmd)
         else:
-            print "%s" % gmetric_cmd
+            sys.stdout.write("%s\n" % gmetric_cmd)
 
 
 def submit_graphite(metrics, options):
