@@ -50,10 +50,10 @@ class ErrorLogLogster(LogsterParser):
                     self.other += 1
 
             else:
-                raise LogsterParsingException, "regmatch failed to match"
+                raise LogsterParsingException("regmatch failed to match")
 
         except Exception, e:
-            raise LogsterParsingException, "regmatch or contents failed with %s" % e
+            raise LogsterParsingException("regmatch or contents failed with %s" % e)
 
     def get_state(self, duration):
         '''Run any necessary calculations on the data collected from the logs
