@@ -57,6 +57,11 @@ import contextlib
 from time import time
 from math import floor
 
+try:
+    import importlib
+except ImportError:
+    pass # Python 2.6
+
 # Local dependencies
 from logster.logster_helper import LogsterParsingException, LockingError
 
@@ -278,6 +283,25 @@ def lock_context(lockfile_name):
         except Exception:
             pass
 
+def import_module(module_name):
+    if 'importlib' not in globals():
+        # Python 2.6 compatibility
+        return __import__(module_name, fromlist=['__name__'])
+    return importlib.import_module(module_name)
+
+def load_parser(class_name, *args, **kwargs):
+    """
+    Given a class name, find the parser by that name. Module may be specified
+    if prefixed by ':'. By default, the module will be
+    'logster.parsers.{class_name}'.
+    """
+    module, sep, class_name = class_name.rpartition(':')
+    module = module or 'logster.parsers.{class_name}'.format(**vars())
+
+    # Import the module and instantiate the indicated class.
+    module = import_module(module)
+    return getattr(module, class_name)(*args, **kwargs)
+
 
 def main():
     script_start_time = time()
@@ -293,9 +317,7 @@ def main():
     logger.info("Executing parser %s on logfile %s" % (class_name, log_file))
     logger.debug("Using state file %s" % logtail_state_file)
 
-    # Import and instantiate the class from the module passed in.  Files and Class names must be the same.
-    module = __import__('logster.parsers.' + class_name, globals(), locals(), [class_name])
-    parser = getattr(module, class_name)(option_string=options.parser_options)
+    parser = load_parser(class_name, option_string=options.parser_options)
 
     with lock_context(logtail_lock_file):
 
