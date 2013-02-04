@@ -4,17 +4,17 @@
 ###  Copyright 2011, Etsy, Inc.
 ###
 ###  This file is part of Logster.
-###  
+###
 ###  Logster is free software: you can redistribute it and/or modify
 ###  it under the terms of the GNU General Public License as published by
 ###  the Free Software Foundation, either version 3 of the License, or
 ###  (at your option) any later version.
-###  
+###
 ###  Logster is distributed in the hope that it will be useful,
 ###  but WITHOUT ANY WARRANTY; without even the implied warranty of
 ###  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 ###  GNU General Public License for more details.
-###  
+###
 ###  You should have received a copy of the GNU General Public License
 ###  along with Logster. If not, see <http://www.gnu.org/licenses/>.
 ###
@@ -34,11 +34,11 @@ class LogsterParser(object):
     """Base class for logster parsers"""
     def parse_line(self, line):
         """Take a line and do any parsing we need to do. Required for parsers"""
-        raise RuntimeError, "Implement me!"
+        raise RuntimeError("Implement me!")
 
     def get_state(self, duration):
         """Run any calculations needed and return list of metric objects"""
-        raise RuntimeError, "Implement me!"
+        raise RuntimeError("Implement me!")
 
 
 class LogsterParsingException(Exception):
@@ -50,4 +50,3 @@ class LogsterParsingException(Exception):
 class LockingError(Exception):
     """ Exception raised for errors creating or destroying lockfiles. """
     pass
-

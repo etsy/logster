@@ -6,8 +6,8 @@
 ###
 ###
 
-import time
 import re
+import sys
 
 from logster.logster_helper import MetricObject, LogsterParser
 from logster.logster_helper import LogsterParsingException
@@ -22,11 +22,10 @@ class ErrorLogLogster(LogsterParser):
         self.error = 0
         self.crit = 0
         self.other = 0
-        
+
         # Regular expression for matching lines we are interested in, and capturing
         # fields from the line
         self.reg = re.compile('^\[[^]]+\] \[(?P<loglevel>\w+)\] .*')
-
 
     def parse_line(self, line):
         '''This function should digest the contents of one line at a time, updating
@@ -52,11 +51,11 @@ class ErrorLogLogster(LogsterParser):
                     self.other += 1
 
             else:
-                raise LogsterParsingException, "regmatch failed to match"
+                raise LogsterParsingException("regmatch failed to match")
 
-        except Exception, e:
-            raise LogsterParsingException, "regmatch or contents failed with %s" % e
-
+        except Exception:
+            e = sys.exc_info()[1]
+            raise LogsterParsingException("regmatch or contents failed with %s" % e)
 
     def get_state(self, duration):
         '''Run any necessary calculations on the data collected from the logs
