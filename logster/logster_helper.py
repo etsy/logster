@@ -89,8 +89,8 @@ class CloudWatch:
             try:
                 conn = HTTPConnection("169.254.169.254")
                 conn.request("GET", "/latest/meta-data/instance-id")
-            except Exception as e:
-                raise CloudWatchException("Can't connect Amazon meta data server to get InstanceID : (%s)" % e.message)
+            except Exception:
+                raise CloudWatchException("Can't connect Amazon meta data server to get InstanceID : (%s)")
 
             self.instance_id = conn.getresponse().read()
         
@@ -139,7 +139,7 @@ class CloudWatch:
         try:
             conn = HTTPConnection(self.base_url)
             conn.request("GET", signedURL)
-        except Exception as e:
+        except Exception:
             raise CloudWatchException("Can't connect Amazon CloudWatch server") 
         res = conn.getresponse()
 
