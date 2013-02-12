@@ -93,6 +93,9 @@ Additional usage details can be found with the -h option:
       --graphite-host=GRAPHITE_HOST
                             Hostname and port for Graphite collector, e.g.
                             graphite.example.com:2003
+      --aws-key=AWS_KEY     Amazon credential key
+      --aws-secret-key=AWS_SECRET_KEY
+                            Amazon credential secret key
       -s STATE_DIR, --state-dir=STATE_DIR
                             Where to store the logtail state file.  Default
                             location /var/run

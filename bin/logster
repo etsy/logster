@@ -51,11 +51,11 @@ import fcntl
 import socket 
 import traceback
 
-from time import time
+from time import time, strftime, gmtime
 from math import floor
 
 # Local dependencies
-from logster.logster_helper import LogsterParsingException, LockingError
+from logster.logster_helper import LogsterParsingException, LockingError, CloudWatch, CloudWatchException
 
 # Globals
 gmetric = "/usr/bin/gmetric"
@@ -85,11 +85,15 @@ cmdline.add_option('--gmetric-options', action='store',
                     default='-d 180 -c /etc/ganglia/gmond.conf')
 cmdline.add_option('--graphite-host', action='store',
                     help='Hostname and port for Graphite collector, e.g. graphite.example.com:2003')
+cmdline.add_option('--aws-key', action='store', default=os.getenv('AWS_ACCESS_KEY_ID'),
+                    help='Amazon credential key')
+cmdline.add_option('--aws-secret-key', action='store', default=os.getenv('AWS_SECRET_ACCESS_KEY_ID'),
+                    help='Amazon credential secret key')
 cmdline.add_option('--state-dir', '-s', action='store', default=state_dir,
                     help='Where to store the logtail state file.  Default location %s' % state_dir)
 cmdline.add_option('--output', '-o', action='append',
-                   choices=('graphite', 'ganglia', 'stdout'),
-                   help="Where to send metrics (can specify multiple times). Choices are 'graphite', 'ganglia', or 'stdout'.")
+                   choices=('graphite', 'ganglia', 'stdout', 'cloudwatch'),
+                   help="Where to send metrics (can specify multiple times). Choices are 'graphite', 'ganglia', 'cloudwatch' or 'stdout'.")
 cmdline.add_option('--stdout-separator', action='store', default="_", dest="stdout_separator",
                     help='Seperator between prefix/suffix and name for stdout. Default is \"%default\".')
 cmdline.add_option('--dry-run', '-d', action='store_true', default=False,
@@ -110,6 +114,9 @@ if not options.output:
 if 'graphite' in options.output and not options.graphite_host:
     cmdline.print_help()
     cmdline.error("You must supply --graphite-host when using 'graphite' as an output type.")
+if 'cloudwatch' in options.output and not options.aws_key and not options.aws_secret_key:
+    cmdline.print_help()
+    cmdline.error("You must supply --aws-key and --aws-secret-key or Set environment variables. AWS_ACCESS_KEY_ID for --aws-key, AWS_SECRET_ACCESS_KEY_ID for --aws-secret-key")
 
 class_name = arguments[0]
 log_file   = arguments[1]
@@ -151,6 +158,8 @@ def submit_stats(parser, duration, options):
         submit_graphite(metrics, options)
     if 'stdout' in options.output:
         submit_stdout(metrics, options)
+    if 'cloudwatch' in options.output:
+        submit_cloudwatch(metrics, options)
 
 def submit_stdout(metrics, options):
     for metric in metrics:
@@ -205,6 +214,33 @@ def submit_graphite(metrics, options):
     if (not options.dry_run):
         s.close()
 
+def submit_cloudwatch(metrics, options):
+    for metric in metrics:
+        
+        if (options.metric_prefix != ""):
+            metric.name = options.metric_prefix + "." + metric.name
+        if (options.metric_suffix is not None):
+            metric.name = metric.name + "." + options.metric_suffix
+        
+        metric.timestamp = strftime("%Y%m%dT%H:%M:00Z", gmtime(metric.timestamp))
+        metric.units = "None"
+        metric_string = "%s %s %s" % (metric.name, metric.value, metric.timestamp)
+        logger.debug("Submitting CloudWatch metric: %s" % metric_string)
+
+        if (not options.dry_run):
+            try:
+                cw = CloudWatch(options.aws_key, options.aws_secret_key, metric).get_instance_id()
+            except CloudWatchException:
+                logger.debug("Is this machine really amazon EC2?")
+                sys.exit(1)
+
+            try:
+                cw.put_data()
+            except CloudWatchException, e:
+                logger.debug(e.message)
+                sys.exit(1)
+        else:       
+            print metric_string
 
 def start_locking(lockfile_name):
     """ Acquire a lock via a provided lockfile filename. """
@@ -338,5 +374,4 @@ def main():
 
 if __name__ == '__main__':
     main()
-
 
