@@ -27,6 +27,7 @@ except ImportError:
 import base64
 import hashlib
 import hmac
+import sys
 
 try:
     from urllib import urlencode, quote_plus
@@ -124,7 +125,10 @@ class CloudWatch:
 
         string_to_sign = "GET\n%s\n/\n%s" % (self.base_url, url_string)
         try:
-            signature = hmac.new( key=bytes(self.secret_key), msg=bytes(string_to_sign), digestmod=hashlib.sha256).digest()
+            if sys.version_info[:2] == (2, 5):
+                signature = hmac.new( key=self.secret_key, msg=string_to_sign, digestmod=hashlib.sha256).digest()
+            else:
+                signature = hmac.new( key=bytes(self.secret_key), msg=bytes(string_to_sign), digestmod=hashlib.sha256).digest()
         except TypeError:
             signature = hmac.new( key=bytes(self.secret_key, "utf-8"), msg=bytes(string_to_sign, "utf-8"), digestmod=hashlib.sha256).digest()
 
