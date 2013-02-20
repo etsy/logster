@@ -158,7 +158,7 @@ def submit_stdout(metrics, options):
             metric.name = options.metric_prefix + options.stdout_separator + metric.name
         if (options.metric_suffix is not None):
             metric.name = metric.name + options.stdout_separator + options.metric_suffix
-        print "%s %s" %(metric.name, metric.value)
+        print "%s %s %s" %(metric.timestamp, metric.name, metric.value)
 
 def submit_ganglia(metrics, options):
     for metric in metrics:
