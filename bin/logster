@@ -207,7 +207,7 @@ def submit_graphite(metrics, options):
         logger.debug("Submitting Graphite metric: %s" % metric_string)
 
         if (not options.dry_run):
-            s.send("%s\n" % metric_string)
+            s.sendall("%s\n" % metric_string)
         else:
             print "%s %s" % (options.graphite_host, metric_string)
 
