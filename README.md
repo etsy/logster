@@ -63,6 +63,14 @@ to Ganglia or Graphite or Amazon CloudWatch.
 
     $ sudo /usr/sbin/logster --dry-run --output=graphite --graphite-host=graphite.example.com:2003 SampleLogster /var/log/httpd/access_log
 
+You can use the provided parsers, or you can use your own parsers by passing
+the complete module and parser name. In this case, the name of the parser does
+not have to match the name of the module (you can have a logster.py file with a
+MyCustomParser parser). Just make sure the module is in your Python path - via
+a virtualenv, for example.
+
+    $ /env/my_org/bin/logster --dry-run --output=stdout my_org_package.logster.MyCustomParser /var/log/my_custom_log
+
 Additional usage details can be found with the -h option:
 
     $ ./logster -h
