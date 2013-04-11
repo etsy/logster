@@ -62,6 +62,7 @@ gmetric = "/usr/bin/gmetric"
 logtail = "/usr/sbin/logtail2"
 log_dir = "/var/log/logster"
 state_dir = "/var/run"
+send_nsca = "/usr/sbin/send_nsca"
 
 script_start_time = time()
 
@@ -89,11 +90,16 @@ cmdline.add_option('--aws-key', action='store', default=os.getenv('AWS_ACCESS_KE
                     help='Amazon credential key')
 cmdline.add_option('--aws-secret-key', action='store', default=os.getenv('AWS_SECRET_ACCESS_KEY_ID'),
                     help='Amazon credential secret key')
+cmdline.add_option('--nsca-host', action='store',
+                    help='Hostname and port for NSCA daemon, e.g. nsca.example.com:5667')
+cmdline.add_option('--nsca-service-hostname', action='store',
+                    help='<host_name> value to use in nsca passive service check. Default is \"%default\"',
+                    default=socket.gethostname())
 cmdline.add_option('--state-dir', '-s', action='store', default=state_dir,
                     help='Where to store the logtail state file.  Default location %s' % state_dir)
 cmdline.add_option('--output', '-o', action='append',
-                   choices=('graphite', 'ganglia', 'stdout', 'cloudwatch'),
-                   help="Where to send metrics (can specify multiple times). Choices are 'graphite', 'ganglia', 'cloudwatch' or 'stdout'.")
+                   choices=('graphite', 'ganglia', 'stdout', 'cloudwatch', 'nsca'),
+                   help="Where to send metrics (can specify multiple times). Choices are 'graphite', 'ganglia', 'cloudwatch', 'nsca' or 'stdout'.")
 cmdline.add_option('--stdout-separator', action='store', default="_", dest="stdout_separator",
                     help='Seperator between prefix/suffix and name for stdout. Default is \"%default\".')
 cmdline.add_option('--dry-run', '-d', action='store_true', default=False,
@@ -117,6 +123,9 @@ if 'graphite' in options.output and not options.graphite_host:
 if 'cloudwatch' in options.output and not options.aws_key and not options.aws_secret_key:
     cmdline.print_help()
     cmdline.error("You must supply --aws-key and --aws-secret-key or Set environment variables. AWS_ACCESS_KEY_ID for --aws-key, AWS_SECRET_ACCESS_KEY_ID for --aws-secret-key")
+if 'nsca' in options.output and not options.nsca_host:
+    cmdline.print_help()
+    cmdline.error("You must supply --nsca-host when using 'nsca' as an output type.")
 
 class_name = arguments[0]
 if class_name.find('.') == -1:
@@ -163,6 +172,8 @@ def submit_stats(parser, duration, options):
         submit_stdout(metrics, options)
     if 'cloudwatch' in options.output:
         submit_cloudwatch(metrics, options)
+    if 'nsca' in options.output:
+        submit_nsca(metrics, options)
 
 def submit_stdout(metrics, options):
     for metric in metrics:
@@ -245,6 +256,30 @@ def submit_cloudwatch(metrics, options):
                 sys.exit(1)
         else:       
             print metric_string
+
+
+def submit_nsca(metrics, options):
+    if (re.match("^[\w\.\-]+\:\d+$", options.nsca_host) is None):
+        raise Exception, "Invalid host:port found for NSCA: '%s'" % options.nsca_host
+
+    host = options.nsca_host.split(':')
+
+    for metric in metrics:
+        if (options.metric_prefix != ""):
+            metric.name = options.metric_prefix + "_" + metric.name
+        if (options.metric_suffix is not None):
+            metric.name = metric.name + "_" + options.metric_suffix
+
+        metric_string = "\t".join((options.nsca_service_hostname, metric.name, str(metric.value), metric.units,))
+        logger.debug("Submitting NSCA status: %s" % metric_string)
+
+        nsca_cmd = "echo '%s' | %s -H %s -p %s" % (metric_string, send_nsca, host[0], host[1],)
+
+        if (not options.dry_run):
+            os.system(nsca_cmd)
+        else:
+            print "%s" % nsca_cmd
+
 
 def start_locking(lockfile_name):
     """ Acquire a lock via a provided lockfile filename. """
