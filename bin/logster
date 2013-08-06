@@ -86,6 +86,8 @@ cmdline.add_option('--gmetric-options', action='store',
                     default='-d 180 -c /etc/ganglia/gmond.conf')
 cmdline.add_option('--graphite-host', action='store',
                     help='Hostname and port for Graphite collector, e.g. graphite.example.com:2003')
+cmdline.add_option('--statsd-host', action='store',
+                    help='Hostname and port for statsd collector, e.g. statsd.example.com:8125')
 cmdline.add_option('--aws-key', action='store', default=os.getenv('AWS_ACCESS_KEY_ID'),
                     help='Amazon credential key')
 cmdline.add_option('--aws-secret-key', action='store', default=os.getenv('AWS_SECRET_ACCESS_KEY_ID'),
@@ -98,8 +100,8 @@ cmdline.add_option('--nsca-service-hostname', action='store',
 cmdline.add_option('--state-dir', '-s', action='store', default=state_dir,
                     help='Where to store the logtail state file.  Default location %s' % state_dir)
 cmdline.add_option('--output', '-o', action='append',
-                   choices=('graphite', 'ganglia', 'stdout', 'cloudwatch', 'nsca'),
-                   help="Where to send metrics (can specify multiple times). Choices are 'graphite', 'ganglia', 'cloudwatch', 'nsca' or 'stdout'.")
+                   choices=('graphite', 'ganglia', 'stdout', 'cloudwatch', 'nsca', 'statsd'),
+                   help="Where to send metrics (can specify multiple times). Choices are 'graphite', 'ganglia', 'cloudwatch', 'nsca' , 'statsd', or 'stdout'.")
 cmdline.add_option('--stdout-separator', action='store', default="_", dest="stdout_separator",
                     help='Seperator between prefix/suffix and name for stdout. Default is \"%default\".')
 cmdline.add_option('--dry-run', '-d', action='store_true', default=False,
@@ -174,6 +176,9 @@ def submit_stats(parser, duration, options):
         submit_cloudwatch(metrics, options)
     if 'nsca' in options.output:
         submit_nsca(metrics, options)
+    if 'statsd' in options.output:
+        submit_statsd(metrics, options)
+
 
 def submit_stdout(metrics, options):
     for metric in metrics:
@@ -279,6 +284,25 @@ def submit_nsca(metrics, options):
             os.system(nsca_cmd)
         else:
             print "%s" % nsca_cmd
+
+
+def submit_statsd(metrics, addr):
+    if (not options.dry_run):
+        host = options.statsd_host.split(':')
+
+    for metric in metrics:
+        if (options.metric_prefix != ""):
+            metric.name = options.metric_prefix + '.' + metric.name
+        if (options.metric_suffix is not None):
+            metric.name = metric.name + '.' + options.metric_suffix
+        metric_string = "%s:%s|g" % (metric.name, metric.value)
+        logger.debug("Submitting statsd metric: %s" % metric_string)
+
+        if (not options.dry_run):
+            udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            udp_sock.sendto(metric_string, (host[0], int(host[1])))
+        else:
+            print "%s %s" % (options.statsd_host, metric_string)
 
 
 def start_locking(lockfile_name):
