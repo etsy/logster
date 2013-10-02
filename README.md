@@ -74,21 +74,23 @@ a virtualenv, for example.
 Additional usage details can be found with the -h option:
 
     $ ./logster -h
-    usage: logster [options] parser logfile
+    Usage: logster [options] parser logfile
 
     Tail a log file and filter each line to generate metrics that can be sent to
     common monitoring packages.
 
     Options:
       -h, --help            show this help message and exit
+      --logtail=LOGTAIL     Specify location of logtail.  Default
+                            /usr/sbin/logtail2
       -p METRIC_PREFIX, --metric-prefix=METRIC_PREFIX
                             Add prefix to all published metrics. This is for
                             people that may multiple instances of same service on
                             same host.
-      -x METRIC_SUFFIX, --metric-suffix=METRIC_PREFIX
+      -x METRIC_SUFFIX, --metric-suffix=METRIC_SUFFIX
                             Add suffix to all published metrics. This is for
-                            people that may multiple instances of same service on
-                            same host.
+                            people that may add suffix at the end of their
+                            metrics.
       --parser-help         Print usage and options for the selected parser
       --parser-options=PARSER_OPTIONS
                             Options to pass to the logster parser such as "-o
@@ -101,14 +103,28 @@ Additional usage details can be found with the -h option:
       --graphite-host=GRAPHITE_HOST
                             Hostname and port for Graphite collector, e.g.
                             graphite.example.com:2003
+      --statsd-host=STATSD_HOST
+                            Hostname and port for statsd collector, e.g.
+                            statsd.example.com:8125
       --aws-key=AWS_KEY     Amazon credential key
       --aws-secret-key=AWS_SECRET_KEY
                             Amazon credential secret key
+      --nsca-host=NSCA_HOST
+                            Hostname and port for NSCA daemon, e.g.
+                            nsca.example.com:5667
+      --nsca-service-hostname=NSCA_SERVICE_HOSTNAME
+                            <host_name> value to use in nsca passive service
+                            check. Default is "sandbox.bbc.co.uk"
       -s STATE_DIR, --state-dir=STATE_DIR
                             Where to store the logtail state file.  Default
                             location /var/run
       -o OUTPUT, --output=OUTPUT
                             Where to send metrics (can specify multiple times).
-                            Choices are 'graphite', 'ganglia', or 'stdout'.
+                            Choices are 'graphite', 'ganglia', 'cloudwatch',
+                            'nsca' , 'statsd', or 'stdout'.
+      --stdout-separator=STDOUT_SEPARATOR
+                            Seperator between prefix/suffix and name for stdout.
+                            Default is "_".
       -d, --dry-run         Parse the log file but send stats to standard output.
       -D, --debug           Provide more verbose logging for debugging.
+
