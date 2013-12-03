@@ -99,6 +99,8 @@ cmdline.add_option('--nsca-service-hostname', action='store',
                     default=socket.gethostname())
 cmdline.add_option('--state-dir', '-s', action='store', default=state_dir,
                     help='Where to store the logtail state file.  Default location %s' % state_dir)
+cmdline.add_option('--log-dir', '-l', action='store', default=log_dir,
+                    help='Where to store the logster logfile.  Default location %s' % log_dir)
 cmdline.add_option('--output', '-o', action='append',
                    choices=('graphite', 'ganglia', 'stdout', 'cloudwatch', 'nsca', 'statsd'),
                    help="Where to send metrics (can specify multiple times). Choices are 'graphite', 'ganglia', 'cloudwatch', 'nsca' , 'statsd', or 'stdout'.")
@@ -135,6 +137,7 @@ if class_name.find('.') == -1:
     class_name = 'logster.parsers.%s.%s' % (class_name, class_name)
 log_file   = arguments[1]
 state_dir  = options.state_dir
+log_dir    = options.log_dir
 logtail    = options.logtail
 
 

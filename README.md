@@ -118,6 +118,9 @@ Additional usage details can be found with the -h option:
       -s STATE_DIR, --state-dir=STATE_DIR
                             Where to store the logtail state file.  Default
                             location /var/run
+      -l LOG_DIR, --log-dir=LOG_DIR
+                            Where to store the logster logfile.  Default
+                            location /var/log/logster
       -o OUTPUT, --output=OUTPUT
                             Where to send metrics (can specify multiple times).
                             Choices are 'graphite', 'ganglia', 'cloudwatch',
