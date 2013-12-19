@@ -38,12 +38,13 @@ from time import time
 
 class MetricObject(object):
     """General representation of a metric that can be used in many contexts"""
-    def __init__(self, name, value, units='', type='float', timestamp=int(time())):
+    def __init__(self, name, value, units='', type='float', timestamp=int(time()), metric_type='g'):
         self.name = name
         self.value = value
         self.units = units
         self.type = type
         self.timestamp = timestamp
+        self.metric_type = metric_type
 
 class LogsterParser(object):
     """Base class for logster parsers"""
