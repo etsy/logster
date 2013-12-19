@@ -59,9 +59,9 @@ Log4jLogster, which generates stats from a log4j log. The --dry-run option will
 allow you to see the metrics being generated on stdout rather than sending them
 to Ganglia or Graphite or Amazon CloudWatch.
 
-    $ sudo /usr/sbin/logster --dry-run --output=ganglia SampleLogster /var/log/httpd/access_log
+    $ sudo /usr/bin/logster --dry-run --output=ganglia SampleLogster /var/log/httpd/access_log
 
-    $ sudo /usr/sbin/logster --dry-run --output=graphite --graphite-host=graphite.example.com:2003 SampleLogster /var/log/httpd/access_log
+    $ sudo /usr/bin/logster --dry-run --output=graphite --graphite-host=graphite.example.com:2003 SampleLogster /var/log/httpd/access_log
 
 You can use the provided parsers, or you can use your own parsers by passing
 the complete module and parser name. In this case, the name of the parser does
