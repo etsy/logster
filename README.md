@@ -131,3 +131,17 @@ Additional usage details can be found with the -h option:
       -d, --dry-run         Parse the log file but send stats to standard output.
       -D, --debug           Provide more verbose logging for debugging.
 
+
+## Contributing
+
+- Fork the project
+- Add your feature
+- If you are adding new functionality, document it in the README
+- Verify your code by running the test suite, and adding additional tests if able.
+- Push the branch up to GitHub (bonus points for topic branches)
+- Send a pull request to the etsy/logster project.
+
+If you have questions, you can find us on IRC in the `#codeascraft` channel on Freenode.
+
+
+
