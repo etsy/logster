@@ -298,7 +298,7 @@ def submit_statsd(metrics, addr):
             metric.name = options.metric_prefix + '.' + metric.name
         if (options.metric_suffix is not None):
             metric.name = metric.name + '.' + options.metric_suffix
-        metric_string = "%s:%s|g" % (metric.name, metric.value)
+        metric_string = "%s:%s|%s" % (metric.name, metric.value, metric.metric_type)
         logger.debug("Submitting statsd metric: %s" % metric_string)
 
         if (not options.dry_run):
