@@ -1,0 +1,65 @@
+.TH LOGSTER "1" "December 2013" "logster 0.0.1"
+.SH NAME
+logster \- generate metrics from logfiles
+.SH SYNOPSIS
+.B logster
+[\fIoptions\fR] \fIparser logfile\fR
+.SH DESCRIPTION
+Tail a log file and filter each line to generate metrics that can be sent to
+common monitoring packages.
+.SH OPTIONS
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+show this help message and exit
+.TP
+\fB\-\-logtail\fR=\fILOGTAIL\fR
+Specify location of logtail.  Default
+\fI/usr/sbin/logtail2\fP
+.TP
+\fB\-p\fR METRIC_PREFIX, \fB\-\-metric\-prefix\fR=\fIMETRIC_PREFIX\fR
+Add prefix to all published metrics. This is for
+people that may multiple instances of same service on
+same host.
+.TP
+\fB\-x\fR METRIC_SUFFIX, \fB\-\-metric\-suffix\fR=\fIMETRIC_SUFFIX\fR
+Add suffix to all published metrics. This is for
+people that may add suffix at the end of their
+metrics.
+.TP
+\fB\-\-parser\-help\fR
+Print usage and options for the selected parser
+.TP
+\fB\-\-parser\-options\fR=\fIPARSER_OPTIONS\fR
+Options to pass to the logster parser such as "\-o
+VALUE \fB\-\-option2\fR VALUE". These are parser\-specific and
+passed directly to the parser.
+.TP
+\fB\-\-gmetric\-options\fR=\fIGMETRIC_OPTIONS\fR
+Options to pass to gmetric such as "\-d 180 \fB\-c\fR
+\fI/etc/ganglia/gmond\fP.conf" (default). These are passed
+directly to gmetric.
+.TP
+\fB\-\-graphite\-host\fR=\fIGRAPHITE_HOST\fR
+Hostname and port for Graphite collector, e.g.
+graphite.example.com:2003
+.TP
+\fB\-s\fR STATE_DIR, \fB\-\-state\-dir\fR=\fISTATE_DIR\fR
+Where to store the logtail state file.  Default
+location \fI/var/run\fP
+.TP
+\fB\-o\fR OUTPUT, \fB\-\-output\fR=\fIOUTPUT\fR
+Where to send metrics (can specify multiple times).
+Choices are 'graphite', 'ganglia', or 'stdout'.
+.TP
+\fB\-d\fR, \fB\-\-dry\-run\fR
+Parse the log file but send stats to standard output.
+.TP
+\fB\-D\fR, \fB\-\-debug\fR
+Provide more verbose logging for debugging.
+.SH "SEE ALSO"
+.BR logtail (1)
+.SH AUTHOR
+logster was written by Etsy, Inc.
+.PP
+This manual page was written by Andreas Rütten <AndreasRuetten@gmx.de>,
+for the Debian project (and may be used by others).
