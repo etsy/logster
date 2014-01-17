@@ -385,7 +385,7 @@ def main():
             logger.info('Writing new state file and exiting. (Was either first run, or state file went missing.)')
             input = os.popen(shell_tail)
             retval = input.close()
-            if (retval != 256):
+            if not retval is None:
                 logger.warning('%s returned bad exit code %s' % (shell_tail, retval))
             end_locking(lockfile, logtail_lock_file)
             sys.exit(0)
