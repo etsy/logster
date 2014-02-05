@@ -69,6 +69,8 @@ script_start_time = time()
 # Command-line options and parsing.
 cmdline = optparse.OptionParser(usage="usage: %prog [options] parser logfile",
     description="Tail a log file and filter each line to generate metrics that can be sent to common monitoring packages.")
+cmdline.add_option('--log-dir', '-l', action='store', default=log_dir,
+                    help='Where to store the logster log file.  Default location %s' % log_dir)
 cmdline.add_option('--logtail', action='store', default=logtail,
                     help='Specify location of logtail.  Default %s' % logtail)
 cmdline.add_option('--metric-prefix', '-p', action='store',
@@ -136,6 +138,7 @@ if class_name.find('.') == -1:
     # If it's a single name, find it in the base logster package
     class_name = 'logster.parsers.%s.%s' % (class_name, class_name)
 log_file   = arguments[1]
+log_dir    = options.log_dir
 state_dir  = options.state_dir
 log_dir    = options.log_dir
 logtail    = options.logtail
