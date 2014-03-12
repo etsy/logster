@@ -34,18 +34,7 @@ our engineers to write log parsers quickly.
 
 ## Installation
 
-Logster depends on the "logtail" utility that can be obtained from the logcheck
-package, either from a Debian package manager or from source:
-
-    http://packages.debian.org/source/sid/logcheck
-
-RPMs for logcheck can be found here:
-
-    http://rpmfind.net/linux/rpm2html/search.php?query=logcheck
-
-Once you have logtail installed via the logcheck package, you make want to look
-over the actual logster script itself to adjust any paths necessary. Then the
-only other thing you need to do is run the installation commands from the
+The only thing you need to do is run the installation commands from the
 `setup.py` file:
 
     $ sudo python setup.py install
