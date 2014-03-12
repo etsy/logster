@@ -50,6 +50,7 @@ import logging.handlers
 import fcntl
 import socket 
 import traceback
+import pygtail
 
 from time import time, strftime, gmtime
 from math import floor
@@ -59,7 +60,6 @@ from logster.logster_helper import LogsterParsingException, LockingError, CloudW
 
 # Globals
 gmetric = "/usr/bin/gmetric"
-logtail = "/usr/sbin/logtail2"
 log_dir = "/var/log/logster"
 state_dir = "/var/run"
 send_nsca = "/usr/sbin/send_nsca"
@@ -69,8 +69,6 @@ script_start_time = time()
 # Command-line options and parsing.
 cmdline = optparse.OptionParser(usage="usage: %prog [options] parser logfile",
     description="Tail a log file and filter each line to generate metrics that can be sent to common monitoring packages.")
-cmdline.add_option('--logtail', action='store', default=logtail,
-                    help='Specify location of logtail.  Default %s' % logtail)
 cmdline.add_option('--metric-prefix', '-p', action='store',
                     help='Add prefix to all published metrics. This is for people that may multiple instances of same service on same host.',
                     default='')
@@ -138,8 +136,6 @@ if class_name.find('.') == -1:
 log_file   = arguments[1]
 state_dir  = options.state_dir
 log_dir    = options.log_dir
-logtail    = options.logtail
-
 
 # Logging infrastructure for use throughout the script.
 # Uses appending log file, rotated at 100 MB, keeping 5.
@@ -348,7 +344,6 @@ def main():
     dirsafe_logfile = log_file.replace('/','-')
     logtail_state_file = '%s/logtail-%s%s.state' % (state_dir, class_name, dirsafe_logfile)
     logtail_lock_file  = '%s/logtail-%s%s.lock' % (state_dir, class_name, dirsafe_logfile)
-    shell_tail = "%s -f %s -o %s" % (logtail, log_file, logtail_state_file)
 
     logger.info("Executing parser %s on logfile %s" % (class_name, log_file))
     logger.debug("Using state file %s" % logtail_state_file)
@@ -383,15 +378,12 @@ def main():
 
         except OSError, e:
             logger.info('Writing new state file and exiting. (Was either first run, or state file went missing.)')
-            input = os.popen(shell_tail)
-            retval = input.close()
-            if (retval != 256):
-                logger.warning('%s returned bad exit code %s' % (shell_tail, retval))
+            input = pygtail.Pygtail(log_file, offset_file=logtail_state_file).readlines()
             end_locking(lockfile, logtail_lock_file)
             sys.exit(0)
 
         # Open a pipe to read input from logtail.
-        input = os.popen(shell_tail)
+        input = pygtail.Pygtail(log_file, logtail_state_file)
 
     except SystemExit, e:
         raise
@@ -399,8 +391,8 @@ def main():
     except Exception, e:
         # note - there is no exception when logtail doesn't exist.
         # I don't know when this exception will ever actually be triggered.
-        print ("Failed to run %s to get log data (line %s): %s" %
-               (shell_tail, lineno(), e))
+        print ("Failed to get log data (line %s): %s" %
+               (lineno(), e))
         end_locking(lockfile, logtail_lock_file)
         sys.exit(1)
 
