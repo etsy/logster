@@ -103,6 +103,8 @@ Additional usage details can be found with the -h option:
       --graphite-host=GRAPHITE_HOST
                             Hostname and port for Graphite collector, e.g.
                             graphite.example.com:2003
+      --graphite-protocol=[tcp|udp]
+                            Specify graphite socket protocol. Options are tcp and udp. Defaults to tcp.
       --statsd-host=STATSD_HOST
                             Hostname and port for statsd collector, e.g.
                             statsd.example.com:8125
