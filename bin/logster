@@ -97,13 +97,15 @@ cmdline.add_option('--nsca-host', action='store',
 cmdline.add_option('--nsca-service-hostname', action='store',
                     help='<host_name> value to use in nsca passive service check. Default is \"%default\"',
                     default=socket.gethostname())
+cmdline.add_option('--librato-user', action='store',
+                    help='Email address and API Key of Librato Metrics users account, e.g. user@example.com:APIKEYHEREDEADBEEF')
 cmdline.add_option('--state-dir', '-s', action='store', default=state_dir,
                     help='Where to store the logtail state file.  Default location %s' % state_dir)
 cmdline.add_option('--log-dir', '-l', action='store', default=log_dir,
                     help='Where to store the logster logfile.  Default location %s' % log_dir)
 cmdline.add_option('--output', '-o', action='append',
-                   choices=('graphite', 'ganglia', 'stdout', 'cloudwatch', 'nsca', 'statsd'),
-                   help="Where to send metrics (can specify multiple times). Choices are 'graphite', 'ganglia', 'cloudwatch', 'nsca' , 'statsd', or 'stdout'.")
+                   choices=('graphite', 'ganglia', 'stdout', 'cloudwatch', 'librato', 'nsca', 'statsd'),
+                   help="Where to send metrics (can specify multiple times). Choices are 'graphite', 'ganglia', 'cloudwatch', 'librato', 'nsca' , 'statsd', or 'stdout'.")
 cmdline.add_option('--stdout-separator', action='store', default="_", dest="stdout_separator",
                     help='Seperator between prefix/suffix and name for stdout. Default is \"%default\".')
 cmdline.add_option('--dry-run', '-d', action='store_true', default=False,
@@ -127,6 +129,9 @@ if 'graphite' in options.output and not options.graphite_host:
 if 'cloudwatch' in options.output and not options.aws_key and not options.aws_secret_key:
     cmdline.print_help()
     cmdline.error("You must supply --aws-key and --aws-secret-key or Set environment variables. AWS_ACCESS_KEY_ID for --aws-key, AWS_SECRET_ACCESS_KEY_ID for --aws-secret-key")
+if 'librato' in options.output and not options.librato_user:
+    cmdline.print_help()
+    cmdline.error("You must supply --librato-user when using 'librato' as an output type.")
 if 'nsca' in options.output and not options.nsca_host:
     cmdline.print_help()
     cmdline.error("You must supply --nsca-host when using 'nsca' as an output type.")
@@ -173,6 +178,8 @@ def submit_stats(parser, duration, options):
         submit_ganglia(metrics, options)
     if 'graphite' in options.output:
         submit_graphite(metrics, options)
+    if 'librato' in options.output:
+        submit_librato(metrics, options)
     if 'stdout' in options.output:
         submit_stdout(metrics, options)
     if 'cloudwatch' in options.output:
@@ -306,6 +313,31 @@ def submit_statsd(metrics, addr):
             udp_sock.sendto(metric_string, (host[0], int(host[1])))
         else:
             print "%s %s" % (options.statsd_host, metric_string)
+
+
+def submit_librato(metrics, options):
+    if (re.match("^\w+@[\w\.]+:\w+$", options.librato_user) == None):
+        raise Exception, "Invalid email:apikey found for Librato user credentials: '%s'" % options.librato_user
+
+    from librato.connection import LibratoConnection
+    auth = options.librato_user.split(':')
+    connection = LibratoConnection(auth[0], auth[1])
+
+    for metric in metrics:
+        if (options.metric_prefix != ""):
+            metric.name = options.metric_prefix + "." + metric.name
+
+        logger.debug("Submitting Librato metric: %s %s" % (metric.name, metric.value))
+
+        if (not options.dry_run):
+            if (metric.name[-6:] == ".count"):
+                counter = connection.get_or_create_counter(metric.name)
+                counter.add(metric.value)
+            else:
+                gauge = connection.get_or_create_gauge(metric.name)
+                gauge.add(metric.value)
+        else:
+            print "Librato(%s): %s %s" % (auth[0], metric.name, metric.value)
 
 
 def start_locking(lockfile_name):
