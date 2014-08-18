@@ -121,6 +121,10 @@ Additional usage details can be found with the -h option:
       -l LOG_DIR, --log-dir=LOG_DIR
                             Where to store the logster logfile.  Default
                             location /var/log/logster
+      --log-conf=LOG_CONFIGURATION_FILE
+                            Location of the logging configuration file.
+                            Default is None and will use the default logging
+                            configuration (rotating file)
       -o OUTPUT, --output=OUTPUT
                             Where to send metrics (can specify multiple times).
                             Choices are 'graphite', 'ganglia', 'cloudwatch',

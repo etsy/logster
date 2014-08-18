@@ -47,6 +47,7 @@ import re
 import optparse
 import stat
 import logging.handlers
+import logging.config
 import fcntl
 import socket 
 import traceback
@@ -101,6 +102,8 @@ cmdline.add_option('--state-dir', '-s', action='store', default=state_dir,
                     help='Where to store the logtail state file.  Default location %s' % state_dir)
 cmdline.add_option('--log-dir', '-l', action='store', default=log_dir,
                     help='Where to store the logster logfile.  Default location %s' % log_dir)
+cmdline.add_option('--log-conf', action='store', default=None,
+                    help='Logging configuration file. None by default')
 cmdline.add_option('--output', '-o', action='append',
                    choices=('graphite', 'ganglia', 'stdout', 'cloudwatch', 'nsca', 'statsd'),
                    help="Where to send metrics (can specify multiple times). Choices are 'graphite', 'ganglia', 'cloudwatch', 'nsca' , 'statsd', or 'stdout'.")
@@ -139,6 +142,7 @@ log_file   = arguments[1]
 state_dir  = options.state_dir
 log_dir    = options.log_dir
 logtail    = options.logtail
+logFileConf= options.log_conf
 
 
 # Logging infrastructure for use throughout the script.
@@ -151,6 +155,9 @@ hdlr = logging.handlers.RotatingFileHandler('%s/logster.log' % log_dir, 'a', 100
 hdlr.setFormatter(formatter)
 logger.addHandler(hdlr)
 logger.setLevel(logging.INFO)
+
+if (logFileConf is not None)
+     logging.config.fileConfig(logFileConf)
 
 if (options.debug):
     logger.setLevel(logging.DEBUG)
