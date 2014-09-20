@@ -76,9 +76,9 @@ class PostfixLogster(LogsterParser):
 
         #mind divide by zero situations 
         if (totalTxns > 0):
-           pctDeferred = (self.numDeferred / totalTxns) * 100
-           pctSent = (self.numSent / totalTxns) * 100
-           pctBounced = (self.numBounced / totalTxns ) * 100
+           pctDeferred = (float(self.numDeferred) / totalTxns) * 100
+           pctSent = (float(self.numSent) / totalTxns) * 100
+           pctBounced = (float(self.numBounced) / totalTxns ) * 100
 
         if (self.numSent > 0):
            avgDelay = self.totalDelay / self.numSent
