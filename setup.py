@@ -16,6 +16,9 @@ setup(
         'logster',
         'logster/parsers'
     ],
+    install_requires = [
+        'pygtail==0.2.2'
+    ],
     zip_safe=False,
     scripts=[
         'bin/logster'
