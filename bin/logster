@@ -50,6 +50,7 @@ import logging.handlers
 import fcntl
 import socket 
 import traceback
+import platform
 
 from time import time, strftime, gmtime
 from math import floor
@@ -333,7 +334,10 @@ def start_locking(lockfile_name):
 def end_locking(lockfile_fd, lockfile_name):
     """ Release a lock via a provided file descriptor. """
     try:
-        fcntl.flock(lockfile_fd, fcntl.LOCK_UN | fcntl.LOCK_NB)
+        if platform.system() == "SunOS": # GH issue #17
+            fcntl.flock(lockfile_fd, fcntl.LOCK_UN)
+        else:
+            fcntl.flock(lockfile_fd, fcntl.LOCK_UN | fcntl.LOCK_NB)
     except IOError, e:
         raise LockingError("Cannot release logster lock (%s)" % lockfile_name)
 
