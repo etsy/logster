@@ -3,13 +3,14 @@
 ###  AUTHOR: [duoduo369](https://github.com/duoduo369)
 ###
 ###  A logster parser file that can be used to count the number of different
-###  messages in an Django error_log
+###  messages in an Python error_log
 ###
 ###  For example:
-###  sudo ./logster --dry-run --output=graphite --graphite-host=127.0.0.1:2003 DjangoLogster /var/log/your_django_log_file
+###  sudo ./logster --dry-run --output=graphite --graphite-host=127.0.0.1:2003 PythonLogster /var/log/your_python_log_file
 ###  log format -- [%(asctime)s] Level:%(levelname)s FuncName:%(funcName)s Line:%(lineno)d Message:%(message)s
 ###
-###  if you use django, but log format is not like this, just modify MATCH_REG(re), to satisfy your requirement
+###  if you use python or django or some other python project,
+###  just modify MATCH_REG(re), to satisfy your log format.
 ###
 
 import re
@@ -17,10 +18,11 @@ import re
 from logster.logster_helper import MetricObject, LogsterParser
 from logster.logster_helper import LogsterParsingException
 
-class DjangoLogster(LogsterParser):
+class PythonLogster(LogsterParser):
 
     MATCH_REG = r'^\[[^]]+\] Level:(?P<{level_key}>\w+) .*'
     LEVEL_KEY = 'level'
+    METRIC_PREFIX = 'python.profix'
     LOG_LEVEL_MAPPER = {
         'NOTSET': 'notset',
         'DEBUG': 'debug',
@@ -48,26 +50,26 @@ class DjangoLogster(LogsterParser):
 
         try:
             # Apply regular expression to each line and extract interesting bits.
-            regMatch = self.reg.match(line)
+            reg_match = self.reg.match(line)
 
-            if regMatch:
-                linebits = regMatch.groupdict()
+            if reg_match:
+                linebits = reg_match.groupdict()
                 level = linebits[self.LEVEL_KEY]
                 attr = self.LOG_LEVEL_MAPPER.get(level, 'others')
                 setattr(self, attr, getattr(self, attr)+1)
 
             else:
-                raise LogsterParsingException, "regmatch failed to match"
+                raise LogsterParsingException("regmatch failed to match")
 
-        except Exception, e:
-            raise LogsterParsingException, "regmatch or contents failed with %s" % e
+        except Exception, ex:
+            raise LogsterParsingException("regmatch or contents failed with {}".format(ex))
 
 
     def get_state(self, duration):
         '''Run any necessary calculations on the data collected from the logs
         and return a list of metric objects.'''
-        self.duration = duration / 10
-        results = [MetricObject('django.OTHERS', self.others/self.duration, "Logs per 10 sec")]
+        duration = duration / 10
+        results = [MetricObject('{}.OTHERS'.format(self.METRIC_PREFIX), self.others/duration, "Logs per 10 sec")]
         for level, attr in self.LOG_LEVEL_MAPPER.iteritems():
-            results.append(MetricObject('django.{}'.format(level), (getattr(self, attr)/self.duration), "Logs per 10 sec"))
+            results.append(MetricObject('{}.{}'.format(self.METRIC_PREFIX, level), (getattr(self, attr)/duration), "Logs per 10 sec"))
         return results
