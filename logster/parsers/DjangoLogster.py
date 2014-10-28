@@ -1,12 +1,17 @@
+# -*- coding: utf-8 -*-
+###
+###  AUTHOR: [duoduo369](https://github.com/duoduo369)
+###
 ###  A logster parser file that can be used to count the number of different
-###  messages in an Apache error_log
+###  messages in an Django error_log
 ###
 ###  For example:
-###  sudo ./logster --dry-run --output=ganglia ErrorLogLogster /var/log/httpd/error_log
+###  sudo ./logster --dry-run --output=graphite --graphite-host=127.0.0.1:2003 DjangoLogster /var/log/your_django_log_file
+###  log format -- [%(asctime)s] Level:%(levelname)s FuncName:%(funcName)s Line:%(lineno)d Message:%(message)s
 ###
+###  if you use django, but log format is not like this, just modify MATCH_REG(re), to satisfy your requirement
 ###
 
-import time
 import re
 
 from logster.logster_helper import MetricObject, LogsterParser
@@ -14,7 +19,7 @@ from logster.logster_helper import LogsterParsingException
 
 class DjangoLogster(LogsterParser):
 
-    MATCH_REG = '^\[[^]]+\] Level:(?P<{level_key}>\w+) .*'
+    MATCH_REG = r'^\[[^]]+\] Level:(?P<{level_key}>\w+) .*'
     LEVEL_KEY = 'level'
     LOG_LEVEL_MAPPER = {
         'NOTSET': 'notset',
