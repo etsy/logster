@@ -88,6 +88,7 @@ cmdline.add_option('--gmetric-options', action='store',
 cmdline.add_option('--graphite-host', action='store',
                     help='Hostname and port for Graphite collector, e.g. graphite.example.com:2003')
 cmdline.add_option('--graphite-protocol', action='store', default='tcp',
+                    choices=('tcp', 'udp'),
                     help='Specify graphite socket protocol. Options are tcp and udp. Defaults to tcp.')
 cmdline.add_option('--statsd-host', action='store',
                     help='Hostname and port for statsd collector, e.g. statsd.example.com:8125')
