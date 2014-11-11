@@ -65,7 +65,7 @@ class PostfixLogster(LogsterParser):
     def get_state(self, duration):
         '''Run any necessary calculations on the data collected from the logs
         and return a list of metric objects.'''
-        self.duration = duration
+        self.duration = float(duration)
         totalTxns = self.numSent + self.numBounced + self.numDeferred
         pctDeferred = 0.0
         pctSent = 0.0

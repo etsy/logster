@@ -61,7 +61,7 @@ class ErrorLogLogster(LogsterParser):
     def get_state(self, duration):
         '''Run any necessary calculations on the data collected from the logs
         and return a list of metric objects.'''
-        self.duration = duration / 10
+        self.duration = duration / 10.0
 
         # Return a list of metrics objects
         return [

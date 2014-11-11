@@ -95,7 +95,7 @@ class SquidLogster(LogsterParser):
     def get_state(self, duration):
         '''Run any necessary calculations on the data collected from the logs
         and return a list of metric objects.'''
-        self.duration = duration
+        self.duration = float(duration)
 
         # Return a list of metrics objects
         return_array = [

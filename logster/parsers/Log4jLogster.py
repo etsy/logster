@@ -86,7 +86,7 @@ class Log4jLogster(LogsterParser):
     def get_state(self, duration):
         '''Run any necessary calculations on the data collected from the logs
         and return a list of metric objects.'''
-        self.duration = duration
+        self.duration = float(duration)
         
         metrics = [MetricObject(level, (getattr(self, level) / self.duration)) for level in self.levels]
         return metrics
