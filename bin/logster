@@ -194,7 +194,7 @@ def submit_stdout(metrics, options):
             metric_name = options.metric_prefix + options.stdout_separator + metric_name
         if (options.metric_suffix is not None):
             metric_name = metric_name + options.stdout_separator + options.metric_suffix
-        print "%s %s %s" %(metric.timestamp, metric_name, metric.value)
+        print("%s %s %s" % (metric.timestamp, metric_name, metric.value))
 
 def submit_ganglia(metrics, options):
     for metric in metrics:
@@ -211,12 +211,12 @@ def submit_ganglia(metrics, options):
         if (not options.dry_run):
             os.system("%s" % gmetric_cmd)
         else:
-            print "%s" % gmetric_cmd
+            print("%s" % gmetric_cmd)
 
 
 def submit_graphite(metrics, options):
     if (re.match("^[\w\.\-]+\:\d+$", options.graphite_host) == None):
-        raise Exception, "Invalid host:port found for Graphite: '%s'" % options.graphite_host
+        raise Exception("Invalid host:port found for Graphite: '%s'" % options.graphite_host)
 
     if (not options.dry_run):
         host = options.graphite_host.split(':')
@@ -242,7 +242,7 @@ def submit_graphite(metrics, options):
             if (not options.dry_run):
                 s.sendall("%s\n" % metric_string)
             else:
-                print "%s %s" % (options.graphite_host, metric_string)
+                print("%s %s" % (options.graphite_host, metric_string))
     finally:
         if (not options.dry_run):
             s.close()
@@ -269,16 +269,16 @@ def submit_cloudwatch(metrics, options):
 
             try:
                 cw.put_data()
-            except CloudWatchException, e:
+            except CloudWatchException as e:
                 logger.debug(e.message)
                 sys.exit(1)
         else:       
-            print metric_string
+            print(metric_string)
 
 
 def submit_nsca(metrics, options):
     if (re.match("^[\w\.\-]+\:\d+$", options.nsca_host) is None):
-        raise Exception, "Invalid host:port found for NSCA: '%s'" % options.nsca_host
+        raise Exception("Invalid host:port found for NSCA: '%s'" % options.nsca_host)
 
     host = options.nsca_host.split(':')
 
@@ -297,7 +297,7 @@ def submit_nsca(metrics, options):
         if (not options.dry_run):
             os.system(nsca_cmd)
         else:
-            print "%s" % nsca_cmd
+            print("%s" % nsca_cmd)
 
 
 def submit_statsd(metrics, addr):
@@ -317,7 +317,7 @@ def submit_statsd(metrics, addr):
             udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             udp_sock.sendto(metric_string, (host[0], int(host[1])))
         else:
-            print "%s %s" % (options.statsd_host, metric_string)
+            print("%s %s" % (options.statsd_host, metric_string))
 
 
 def start_locking(lockfile_name):
@@ -346,12 +346,12 @@ def end_locking(lockfile_fd, lockfile_name):
             fcntl.flock(lockfile_fd, fcntl.LOCK_UN)
         else:
             fcntl.flock(lockfile_fd, fcntl.LOCK_UN | fcntl.LOCK_NB)
-    except IOError, e:
+    except IOError as e:
         raise LockingError("Cannot release logster lock (%s)" % lockfile_name)
 
     try:
         os.unlink(lockfile_name)
-    except OSError, e:
+    except OSError as e:
         raise LockingError("Cannot unlink %s" % lockfile_name)
 
     logger.debug("Unlocking successful")
@@ -378,7 +378,7 @@ def main():
     # the cron period, which is likely on first run if the logfile is huge.
     try:
         lockfile = start_locking(logtail_lock_file)
-    except LockingError, e:
+    except LockingError as e:
         logger.warning("Failed to get lock. Is another instance of logster running?")
         sys.exit(1)
 
@@ -396,7 +396,7 @@ def main():
             duration = floor(time()) - floor(state_file_age)
             logger.debug("Setting duration to %s seconds." % duration)
 
-        except OSError, e:
+        except OSError as e:
             logger.info('Writing new state file and exiting. (Was either first run, or state file went missing.)')
             input = os.popen(shell_tail)
             retval = input.close()
@@ -408,13 +408,13 @@ def main():
         # Open a pipe to read input from logtail.
         input = os.popen(shell_tail)
 
-    except SystemExit, e:
+    except SystemExit as e:
         raise
  
-    except Exception, e:
+    except Exception as e:
         # note - there is no exception when logtail doesn't exist.
         # I don't know when this exception will ever actually be triggered.
-        print ("Failed to run %s to get log data (line %s): %s" %
+        print("Failed to run %s to get log data (line %s): %s" %
                (shell_tail, lineno(), e))
         end_locking(lockfile, logtail_lock_file)
         sys.exit(1)
@@ -424,15 +424,15 @@ def main():
         for line in input:
             try:
                 parser.parse_line(line)
-            except LogsterParsingException, e:
+            except LogsterParsingException as e:
                 # This should only catch recoverable exceptions (of which there
                 # aren't any at the moment).
                 logger.debug("Parsing exception caught at %s: %s" % (lineno(), e))
 
         submit_stats(parser, duration, options)
 
-    except Exception, e:
-        print "Exception caught at %s: %s" % (lineno(), e)
+    except Exception as e:
+        print("Exception caught at %s: %s" % (lineno(), e))
         traceback.print_exc()
         end_locking(lockfile, logtail_lock_file)
         sys.exit(1)
@@ -451,7 +451,7 @@ def main():
     # try and remove the lockfile one last time, but it's a valid state that it's already been removed.
     try:
         end_locking(lockfile, logtail_lock_file)
-    except Exception, e:
+    except Exception as e:
         pass
 
 if __name__ == '__main__':

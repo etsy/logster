@@ -58,8 +58,8 @@ class PostfixLogster(LogsterParser):
                elif (linebits['status'] == 'bounced'):
                   self.numBounced += 1
 
-        except Exception, e:
-            raise LogsterParsingException, "regmatch or contents failed with %s" % e
+        except Exception as e:
+            raise LogsterParsingException("regmatch or contents failed with %s" % e)
 
 
     def get_state(self, duration):
