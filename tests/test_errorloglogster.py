@@ -49,8 +49,7 @@ class TestErrorLogLogster(unittest.TestCase):
             self.assertEqual(expected[m.name], m.value)
 
     def test_invalid_line(self):
-        with self.assertRaises(LogsterParsingException):
-            self.logster.parse_line('invalid log entry')
+        self.assertRaises(LogsterParsingException, self.logster.parse_line, 'invalid log entry')
 
 if __name__ == '__main__':
     unittest.main()

@@ -16,8 +16,7 @@ class TestLog4jLogster(unittest.TestCase):
         self.assertEqual(2, self.logster.ERROR)
         self.assertEqual(0, self.logster.FATAL)
 
-        with self.assertRaises(LogsterParsingException):
-            self.logster.parse_line(self.log_tmpl % 'DEBUG')
+        self.assertRaises(LogsterParsingException, self.logster.parse_line, self.log_tmpl % 'DEBUG')
         self.assertFalse(hasattr(self.logster, 'DEBUG'))
 
     def test_valid_lines_non_default(self):
@@ -25,10 +24,8 @@ class TestLog4jLogster(unittest.TestCase):
         debug_logster.parse_line(self.log_tmpl % 'DEBUG')
         self.assertEqual(1, debug_logster.DEBUG)
 
-        with self.assertRaises(LogsterParsingException):
-            debug_logster.parse_line(self.log_tmpl % 'WARN')
-            debug_logster.parse_line(self.log_tmpl % 'ERROR')
-            debug_logster.parse_line(self.log_tmpl % 'ERROR')
+        self.assertRaises(LogsterParsingException, debug_logster.parse_line, self.log_tmpl % 'WARN')
+        self.assertRaises(LogsterParsingException, debug_logster.parse_line, self.log_tmpl % 'ERROR')
         self.assertFalse(hasattr(debug_logster, 'WARN'))
         self.assertFalse(hasattr(debug_logster, 'ERROR'))
         self.assertFalse(hasattr(debug_logster, 'FATAL'))
@@ -58,8 +55,7 @@ class TestLog4jLogster(unittest.TestCase):
             self.assertEqual(expected[m.name], m.value)
 
     def test_invalid_line(self):
-        with self.assertRaises(LogsterParsingException):
-            self.logster.parse_line('invalid log entry')
+        self.assertRaises(LogsterParsingException, self.logster.parse_line, 'invalid log entry')
 
 if __name__ == '__main__':
     unittest.main()
