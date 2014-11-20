@@ -5,3 +5,7 @@
 *.venv
 build
 dist
+debian/files
+debian/*.debhelper
+debian/*.substvars
+debian/logster/

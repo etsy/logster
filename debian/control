@@ -1,0 +1,25 @@
+Source: logster
+Section: python
+Priority: extra
+Maintainer: Kiall Mac Innes <kiall@managedit.ie>
+Build-Depends:
+    debhelper (>= 8.0.0),
+    python (>= 2.6)
+Build-Depends-Indep:
+    python-setuptools
+Standards-Version: 3.9.3
+XS-Python-Version: >= 2.6
+Homepage: https://github.com/etsy/logster
+
+Package: logster
+Architecture: all
+Depends:
+    logtail,
+    python-pkg-resources,
+    ${python:Depends},
+    ${misc:Depends}
+Provides:
+    ${python:Provides}
+Description: Logster - Generate metrics for Graphite and Ganglia
+ Logster parsees log files and generate metrics for Graphite
+ and Ganglia
