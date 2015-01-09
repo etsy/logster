@@ -5,6 +5,7 @@
 ###  For example:
 ###  sudo ./logster --dry-run --output=ganglia --parser-options '--key-separator _' JsonLogster /var/cache/stats.log.json
 ###
+import sys
 import json
 import optparse
 
@@ -59,7 +60,10 @@ class JsonLogster(LogsterParser):
         items = {}
 
         try:
-            iterator = node.iteritems()
+            if sys.version_info >= (3, 0):
+                iterator = iter(node.items())
+            else:
+                iterator = node.iteritems()
         except AttributeError:
             iterator = enumerate(node)
 
@@ -72,7 +76,7 @@ class JsonLogster(LogsterParser):
             if key is False:
                 continue;
 
-            if hasattr(item, '__iter__'):
+            if type(item) in (list, dict):
                 # merge the items all together
                 items.update(self.flatten_object(item, separator, key_filter_callback, parent_keys + [str(key)]))
             else:
