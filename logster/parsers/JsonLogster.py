@@ -89,7 +89,10 @@ class JsonLogster(LogsterParser):
         '''This function should digest the contents of one line at a time, updating
         object's state variables. Takes a single argument, the line to be parsed.'''
 
-        json_data = json.loads(line)
+        try:
+            json_data = json.loads(line)
+        except Exception as e:
+            raise LogsterParsingException("{0} - {1}".format(type(e), e))
         self.metrics = self.flatten_object(json.loads(line), self.key_separator, self.key_filter)
 
     def get_state(self, duration):

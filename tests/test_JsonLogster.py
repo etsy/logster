@@ -1,4 +1,5 @@
 from logster.parsers.JsonLogster import JsonLogster
+from logster.logster_helper import LogsterParsingException
 import unittest
 
 class TestJsonLogster(unittest.TestCase):
@@ -34,11 +35,15 @@ class TestJsonLogster(unittest.TestCase):
         return key
 
     def test_init(self):
-        self.assertEquals(self.json_logster.key_separator, self.key_separator)
+        self.assertEqual(self.json_logster.key_separator, self.key_separator)
 
     def test_flatten_object(self):
         flattened = self.json_logster.flatten_object(self.json_data, self.key_separator, self.key_filter_callback)
-        self.assertEquals(flattened, self.flattened_should_be)
+        self.assertEqual(flattened, self.flattened_should_be)
+
+    def test_invalid_json(self):
+        self.assertRaises(LogsterParsingException, self.json_logster.parse_line, '{ "hello": "world"')
+
 
 if __name__ == '__main__':
     unittest.main()
