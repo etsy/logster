@@ -57,10 +57,10 @@ from math import floor
 
 # Local dependencies
 from logster.logster_helper import LogsterParsingException, LockingError, CloudWatch, CloudWatchException
+from logster.tailers.logtailtailer import LogtailTailer
 
 # Globals
 gmetric = "/usr/bin/gmetric"
-logtail = "/usr/sbin/logtail2"
 log_dir = "/var/log/logster"
 state_dir = "/var/run"
 send_nsca = "/usr/sbin/send_nsca"
@@ -70,8 +70,10 @@ script_start_time = time()
 # Command-line options and parsing.
 cmdline = optparse.OptionParser(usage="usage: %prog [options] parser logfile",
     description="Tail a log file and filter each line to generate metrics that can be sent to common monitoring packages.")
-cmdline.add_option('--logtail', action='store', default=logtail,
-                    help='Specify location of logtail.  Default %s' % logtail)
+cmdline.add_option('--tailer', '-t', action='store', default='logtail',
+                    choices=('logtail', 'pygtail'), help='Specify which tailer to use. Options are logtail and pygtail. Default is \"%default\".')
+cmdline.add_option('--logtail', action='store', default=LogtailTailer.default_logtail_path,
+                    help='Specify location of logtail. Default \"%default\"')
 cmdline.add_option('--metric-prefix', '-p', action='store',
                     help='Add prefix to all published metrics. This is for people that may multiple instances of same service on same host.',
                     default='')
@@ -102,7 +104,7 @@ cmdline.add_option('--nsca-service-hostname', action='store',
                     help='<host_name> value to use in nsca passive service check. Default is \"%default\"',
                     default=socket.gethostname())
 cmdline.add_option('--state-dir', '-s', action='store', default=state_dir,
-                    help='Where to store the logtail state file.  Default location %s' % state_dir)
+                    help='Where to store the tailer state file.  Default location %s' % state_dir)
 cmdline.add_option('--log-dir', '-l', action='store', default=log_dir,
                     help='Where to store the logster logfile.  Default location %s' % log_dir)
 cmdline.add_option('--output', '-o', action='append',
@@ -122,6 +124,13 @@ if options.parser_help:
 if (len(arguments) != 2):
     cmdline.print_help()
     cmdline.error("Supply at least two arguments: parser and logfile.")
+
+if options.tailer == 'pygtail':
+    from logster.tailers.pygtailtailer import PygtailTailer
+    tailer_klass = PygtailTailer
+else:
+    tailer_klass = LogtailTailer
+
 if not options.output:
     cmdline.print_help()
     cmdline.error("Supply where the data should be sent with -o (or --output).")
@@ -142,7 +151,6 @@ if class_name.find('.') == -1:
 log_file   = arguments[1]
 state_dir  = options.state_dir
 log_dir    = options.log_dir
-logtail    = options.logtail
 
 
 # Logging infrastructure for use throughout the script.
@@ -359,14 +367,13 @@ def end_locking(lockfile_fd, lockfile_name):
 
 
 def main():
-
     dirsafe_logfile = log_file.replace('/','-')
-    logtail_state_file = '%s/logtail-%s%s.state' % (state_dir, class_name, dirsafe_logfile)
-    logtail_lock_file  = '%s/logtail-%s%s.lock' % (state_dir, class_name, dirsafe_logfile)
-    shell_tail = "%s -f %s -o %s" % (logtail, log_file, logtail_state_file)
+    state_file = '%s/%s-%s%s.state' % (state_dir, tailer_klass.short_name, class_name, dirsafe_logfile)
+    lock_file  = '%s/%s-%s%s.lock' % (state_dir, tailer_klass.short_name, class_name, dirsafe_logfile)
+    tailer = tailer_klass(log_file, state_file, options, logger)
 
     logger.info("Executing parser %s on logfile %s" % (class_name, log_file))
-    logger.debug("Using state file %s" % logtail_state_file)
+    logger.debug("Using state file %s" % state_file)
 
     # Import and instantiate the class from the module passed in.
     module_name, parser_name = class_name.rsplit('.', 1)
@@ -377,7 +384,7 @@ def main():
     # simultaneuosly. This will happen if the log parsing takes more time than
     # the cron period, which is likely on first run if the logfile is huge.
     try:
-        lockfile = start_locking(logtail_lock_file)
+        lockfile = start_locking(lock_file)
     except LockingError as e:
         logger.warning("Failed to get lock. Is another instance of logster running?")
         sys.exit(1)
@@ -386,11 +393,11 @@ def main():
     try:
 
         # Read the age of the state file to see how long it's been since we last
-        # ran. Replace the state file if it has gone missing. While we are her,
-        # touch the state file to reset the time in case logtail doesn't
+        # ran. Replace the state file if it has gone missing. While we are here,
+        # touch the state file to reset the time in case the tailer doesn't
         # find any new lines (and thus won't update the statefile).
         try:
-            state_file_age = os.stat(logtail_state_file)[stat.ST_MTIME]
+            state_file_age = os.stat(state_file)[stat.ST_MTIME]
 
             # Calculate now() - state file age to determine check duration.
             duration = floor(time()) - floor(state_file_age)
@@ -398,30 +405,12 @@ def main():
 
         except OSError as e:
             logger.info('Writing new state file and exiting. (Was either first run, or state file went missing.)')
-            input = os.popen(shell_tail)
-            retval = input.close()
-            if not retval is None:
-                logger.warning('%s returned bad exit code %s' % (shell_tail, retval))
-            end_locking(lockfile, logtail_lock_file)
+            tailer.create_statefile()
+            end_locking(lockfile, lock_file)
             sys.exit(0)
 
-        # Open a pipe to read input from logtail.
-        input = os.popen(shell_tail)
-
-    except SystemExit as e:
-        raise
-
-    except Exception as e:
-        # note - there is no exception when logtail doesn't exist.
-        # I don't know when this exception will ever actually be triggered.
-        print("Failed to run %s to get log data (line %s): %s" %
-               (shell_tail, lineno(), e))
-        end_locking(lockfile, logtail_lock_file)
-        sys.exit(1)
-
-    # Parse each line from input, then send all stats to their collectors.
-    try:
-        for line in input:
+        # Parse each line from input, then send all stats to their collectors.
+        for line in tailer.ireadlines():
             try:
                 parser.parse_line(line)
             except LogsterParsingException as e:
@@ -431,10 +420,12 @@ def main():
 
         submit_stats(parser, duration, options)
 
+    except SystemExit as e:
+        raise
     except Exception as e:
         print("Exception caught at %s: %s" % (lineno(), e))
         traceback.print_exc()
-        end_locking(lockfile, logtail_lock_file)
+        end_locking(lockfile, lock_file)
         sys.exit(1)
 
     # Log the execution time
@@ -444,13 +435,13 @@ def main():
     # Set mtime and atime for the state file to the startup time of the script
     # so that the cron interval is not thrown off by parsing a large number of
     # log entries.
-    os.utime(logtail_state_file, (floor(script_start_time), floor(script_start_time)))
+    os.utime(state_file, (floor(script_start_time), floor(script_start_time)))
 
-    end_locking(lockfile, logtail_lock_file)
+    end_locking(lockfile, lock_file)
 
     # try and remove the lockfile one last time, but it's a valid state that it's already been removed.
     try:
-        end_locking(lockfile, logtail_lock_file)
+        end_locking(lockfile, lock_file)
     except Exception as e:
         pass
 

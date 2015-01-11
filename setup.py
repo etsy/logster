@@ -14,7 +14,11 @@ setup(
     url='https://github.com/etsy/logster',
     packages=[
         'logster',
-        'logster/parsers'
+        'logster/parsers',
+        'logster/tailers'
+    ],
+    install_requires = [
+        'pygtail>=0.5.1'
     ],
     zip_safe=False,
     scripts=[
