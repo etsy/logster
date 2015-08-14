@@ -331,7 +331,7 @@ def submit_statsd(metrics, addr):
 def start_locking(lockfile_name):
     """ Acquire a lock via a provided lockfile filename. """
     if os.path.exists(lockfile_name):
-        raise LockingError("Lock file already exists.")
+        raise LockingError("Lock file (%s) already exists." % lockfile_name)
 
     f = open(lockfile_name, 'w')
 
@@ -386,7 +386,7 @@ def main():
     try:
         lockfile = start_locking(lock_file)
     except LockingError as e:
-        logger.warning("Failed to get lock. Is another instance of logster running?")
+        logger.warning(str(e))
         sys.exit(1)
 
     # Get input to parse.
