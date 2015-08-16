@@ -167,7 +167,7 @@ hdlr.setFormatter(formatter)
 logger.addHandler(hdlr)
 logger.setLevel(logging.INFO)
 
-if (options.log_conf)
+if (options.log_conf):
      logging.config.fileConfig(options.log_conf)
 
 if (options.debug):
