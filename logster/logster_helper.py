@@ -67,85 +67,23 @@ class LockingError(Exception):
     """ Exception raised for errors creating or destroying lockfiles. """
     pass
 
-class CloudWatchException(Exception):
-    """ Raise thie exception if the connection can't be established 
-        with Amazon server """
-    pass
 
-class CloudWatch:
-    """ Base class for Amazon CloudWatch """
-    def __init__(self, key, secret_key, metric):
-        """ Specify Amazon CloudWatch params """
-        
-        self.base_url = "monitoring.ap-northeast-1.amazonaws.com"
-        self.key = key
-        self.secret_key = secret_key
-        self.metric = metric
+def build_metric_name(metric, prefix, suffix, separator):
+    metric_name = metric.name
+    if prefix:
+        metric_name = prefix + separator + metric_name
+    if suffix:
+        metric_name = metric_name + separator + suffix
+    return metric_name
 
-    def get_instance_id(self, instance_id = None):
-        """ get instance id from amazon meta data server """
 
-        self.instance_id = instance_id
+class LogsterOutput(object):
+    def __init__(self, parser, options, logger):
+        self.options = options
+        self.logger = logger
+        self.dry_run = options.dry_run
 
-        if self.instance_id is None: 
-            try:
-                conn = HTTPConnection("169.254.169.254")
-                conn.request("GET", "/latest/meta-data/instance-id")
-            except Exception:
-                raise CloudWatchException("Can't connect Amazon meta data server to get InstanceID : (%s)")
-
-            self.instance_id = conn.getresponse().read()
-        
-        return self
-
-    def set_params(self):
-
-        params = {'Namespace': 'logster',
-       'MetricData.member.1.MetricName': self.metric.name,
-       'MetricData.member.1.Value': self.metric.value,
-       'MetricData.member.1.Unit': self.metric.units,
-       'MetricData.member.1.Dimensions.member.1.Name': 'InstanceID',
-       'MetricData.member.1.Dimensions.member.1.Value': self.instance_id}       
-     
-        self.url_params = params
-        self.url_params['AWSAccessKeyId'] = self.key
-        self.url_params['Action'] = 'PutMetricData'
-        self.url_params['SignatureMethod'] = 'HmacSHA256'
-        self.url_params['SignatureVersion'] = '2'
-        self.url_params['Version'] = '2010-08-01'
-        self.url_params['Timestamp'] = self.metric.timestamp
-
-        return self
-    
-    def get_signed_url(self):
-        """ build signed parameters following
-            http://docs.amazonwebservices.com/AmazonCloudWatch/latest/APIReference/API_PutMetricData.html """
-        keys = sorted(self.url_params)
-        values = map(self.url_params.get, keys)
-        url_string = urlencode(list(zip(keys,values)))
-
-        string_to_sign = "GET\n%s\n/\n%s" % (self.base_url, url_string)
-        try:
-            if sys.version_info[:2] == (2, 5):
-                signature = hmac.new( key=self.secret_key, msg=string_to_sign, digestmod=hashlib.sha256).digest()
-            else:
-                signature = hmac.new( key=bytes(self.secret_key), msg=bytes(string_to_sign), digestmod=hashlib.sha256).digest()
-        except TypeError:
-            signature = hmac.new( key=bytes(self.secret_key, "utf-8"), msg=bytes(string_to_sign, "utf-8"), digestmod=hashlib.sha256).digest()
-
-        signature = base64.encodestring(signature).strip()
-        urlencoded_signature = quote_plus(signature)
-        url_string += "&Signature=%s" % urlencoded_signature
-
-        return "/?" + url_string
- 
-    def put_data(self):
-        signedURL = self.set_params().get_signed_url()
-        try:
-            conn = HTTPConnection(self.base_url)
-            conn.request("GET", signedURL)
-        except Exception:
-            raise CloudWatchException("Can't connect Amazon CloudWatch server") 
-        res = conn.getresponse()
-
+    def get_metric_name(self, metric, separator="."):
+        build_metric_name(metric, self.options.metric_prefix,
+                          self.options.metric_suffix, separator)
 
