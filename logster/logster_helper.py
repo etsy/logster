@@ -19,20 +19,6 @@
 ###  along with Logster. If not, see <http://www.gnu.org/licenses/>.
 ###
 
-try:
-    from httplib import *
-except ImportError:
-    from http.client import *
-
-import base64
-import hashlib
-import hmac
-import sys
-
-try:
-    from urllib import urlencode, quote_plus
-except ImportError:
-    from urllib.parse import urlencode, quote_plus
 
 from time import time
 
