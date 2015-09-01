@@ -1,4 +1,5 @@
-from logster.logster_helper import CloudWatch, MetricObject
+from logster.logster_helper import MetricObject
+from logster.outputs.CloudwatchOutput import CloudWatch
 from time import time, strftime, gmtime
 import unittest
 

@@ -2,6 +2,20 @@ from logster.logster_helper import LogsterOutput
 from time import strftime, gmtime
 import os
 import sys
+import base64
+import hashlib
+import hmac
+import sys
+
+try:
+    from httplib import *
+except ImportError:
+    from http.client import *
+
+try:
+    from urllib import urlencode, quote_plus
+except ImportError:
+    from urllib.parse import urlencode, quote_plus
 
 
 class CloudWatchException(Exception):
