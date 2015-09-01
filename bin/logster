@@ -65,17 +65,21 @@ log_dir = "/var/log/logster"
 state_dir = "/var/run"
 
 
-builtin_output_classes = dict([
-    (cls.shortname, cls) for name, cls in inspect.getmembers(logster.outputs.builtin)
-    if inspect.isclass(cls) and issubclass(cls, LogsterOutput) and not cls is LogsterOutput
-])
+# Find all built-in output classes and store them against their shortname
+builtin_output_classes = dict(
+    [(cls.shortname, cls) for name, cls in inspect.getmembers(logster.outputs.builtin)
+        if inspect.isclass(cls) and issubclass(cls, LogsterOutput) and not cls is LogsterOutput
+    ]
+)
 
 
+# optparse callback to locate output class by shortname or full path
 def load_output_klass(option, opt, value, parser):
-    outputs = parser.values.outputs if parser.values.outputs else []
+    outputs = getattr(parser.values, option.dest) if getattr(parser.values, option.dest) else []
 
     output_klass = builtin_output_classes.get(value)
     if not output_klass:
+        # Assume full path if shortname not found in builtin outputs
         try:
             module_name, output_name = value.rsplit('.', 1)
             module = __import__(module_name, globals(), locals(), [output_name])
@@ -83,13 +87,33 @@ def load_output_klass(option, opt, value, parser):
         except:
             parser.error("Unable to load output class %s" % value)
 
+    # Ignore dupes
     if output_klass not in outputs:
+        # Add output class-specific optparse options
         add_options = getattr(output_klass, "add_options", None)
         if callable(add_options):
             add_options(parser)
 
         outputs.append(output_klass)
+
+    # Append to list of outputs (option can be specified multiple times)
     setattr(parser.values, option.dest, outputs)
+
+
+# As we add options during parse, their defaults don't get picked up
+# (optionparser evaluates defaults once at the start of parse_args)
+# This re-evaluates defaults after the parse and sets any missing
+def parse_args(optionparser):
+    options, arguments = optionparser.parse_args()
+    post_parse_defaults = optionparser.get_default_values()
+    for option in optionparser.option_list:
+        if option.dest:
+            has_default = hasattr(post_parse_defaults, option.dest)
+            has_option_val = hasattr(options, option.dest)
+            if has_default and not has_option_val:
+                setattr(options, option.dest, getattr(post_parse_defaults, option.dest))
+
+    return options, arguments
 
 
 script_start_time = time()
@@ -119,15 +143,14 @@ cmdline.add_option('--log-dir', '-l', action='store', default=log_dir,
                     help='Where to store the logster logfile.  Default location %s' % log_dir)
 cmdline.add_option('--log-conf', action='store', default=None,
                     help='Logging configuration file. None by default')
-cmdline.add_option('--output', '-o', action='callback', callback=load_output_klass, type="string", dest="outputs", metavar="OUTPUT",
+cmdline.add_option('--output', '-o', action='callback', callback=load_output_klass, type="string", dest="output", metavar="OUTPUT",
                    help="Where to send metrics (can specify multiple times).\
                          Choices are %s or a fully qualified Python class name" % ', '.join(builtin_output_classes.keys()))
 cmdline.add_option('--dry-run', '-d', action='store_true', default=False,
                     help='Parse the log file but send stats to standard output.')
 cmdline.add_option('--debug', '-D', action='store_true', default=False,
                     help='Provide more verbose logging for debugging.')
-options, arguments = cmdline.parse_args()
-
+options, arguments = parse_args(cmdline)
 
 if options.parser_help:
     options.parser_options = '-h'
@@ -149,7 +172,7 @@ else:
     import fcntl
     lock_exception_klass = IOError
 
-if not options.output:
+if not (hasattr(options, 'output') and len(options.output) > 0):
     cmdline.print_help()
     cmdline.error("Supply where the data should be sent with -o (or --output).")
 
@@ -193,10 +216,9 @@ def lineno():
     return inspect.currentframe().f_back.f_lineno
 
 
-def submit_stats(parser, duration, options):
+def submit_stats(parser, duration, outputs):
     metrics = parser.get_state(duration)
-    for output_klass in options.output:
-        output = output_klass(options, logger)
+    for output in outputs:
         output.submit(metrics)
 
 
@@ -259,6 +281,9 @@ def main():
     module = __import__(module_name, globals(), locals(), [parser_name])
     parser = getattr(module, parser_name)(option_string=options.parser_options)
 
+    # Instantiate output classes
+    outputs = [output_klass(cmdline, options, logger) for output_klass in options.output]
+
     # Check for lock file so we don't run multiple copies of the same parser
     # simultaneuosly. This will happen if the log parsing takes more time than
     # the cron period, which is likely on first run if the logfile is huge.
@@ -297,7 +322,7 @@ def main():
                 # aren't any at the moment).
                 logger.debug("Parsing exception caught at %s: %s" % (lineno(), e))
 
-        submit_stats(parser, duration, options)
+        submit_stats(parser, duration, outputs)
 
     except SystemExit as e:
         raise
