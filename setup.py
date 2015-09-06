@@ -15,7 +15,8 @@ setup(
     packages=[
         'logster',
         'logster/parsers',
-        'logster/tailers'
+        'logster/tailers',
+        'logster/outputs'
     ],
     install_requires = [
         'pygtail>=0.5.1'
