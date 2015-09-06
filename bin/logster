@@ -92,7 +92,9 @@ def load_output_klass(option, opt, value, parser):
         # Add output class-specific optparse options
         add_options = getattr(output_klass, "add_options", None)
         if callable(add_options):
-            add_options(parser)
+            option_group = optparse.OptionGroup(parser, "%s options" % output_klass.__name__)
+            add_options(option_group)
+            parser.add_option_group(option_group)
 
         outputs.append(output_klass)
 
@@ -106,7 +108,7 @@ def load_output_klass(option, opt, value, parser):
 def parse_args(optionparser):
     options, arguments = optionparser.parse_args()
     post_parse_defaults = optionparser.get_default_values()
-    for option in optionparser.option_list:
+    for option in optionparser._get_all_options():
         if option.dest:
             has_default = hasattr(post_parse_defaults, option.dest)
             has_option_val = hasattr(options, option.dest)
