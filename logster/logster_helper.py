@@ -54,15 +54,6 @@ class LockingError(Exception):
     pass
 
 
-def build_metric_name(metric, prefix, suffix, separator):
-    metric_name = metric.name
-    if prefix:
-        metric_name = prefix + separator + metric_name
-    if suffix:
-        metric_name = metric_name + separator + suffix
-    return metric_name
-
-
 class LogsterOutput(object):
     def __init__(self, parser, options, logger):
         self.options = options
@@ -70,6 +61,10 @@ class LogsterOutput(object):
         self.dry_run = options.dry_run
 
     def get_metric_name(self, metric, separator="."):
-        build_metric_name(metric, self.options.metric_prefix,
-                          self.options.metric_suffix, separator)
+        metric_name = metric.name
+        if self.options.metric_prefix:
+            metric_name = self.options.metric_prefix + separator + metric_name
+        if self.options.metric_suffix:
+            metric_name = metric_name + separator + self.options.metric_suffix
+        return metric_name
 
