@@ -8,7 +8,7 @@ class StdoutOutput(LogsterOutput):
     @classmethod
     def add_options(cls, parser):
         parser.add_option('--stdout-separator', action='store', default="_", dest="stdout_separator",
-                          help='Seperator between prefix/suffix and name for stdout. Default is \"%default\".')
+                          help='Separator between prefix/suffix and name for stdout. Default is \"%default\".')
 
 
     def __init__(self, parser, options, logger):
