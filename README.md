@@ -1,8 +1,7 @@
 # Logster - generate metrics from logfiles [![Build Status](https://secure.travis-ci.org/etsy/logster.png)](http://travis-ci.org/etsy/logster)
 
 Logster is a utility for reading log files and generating metrics to
-configurable outputs. Graphite, Ganglia, Amazon CloudWatch, Nagios, StatsD and
-stdout are currently supported. It is ideal for visualizing trends of events that
+configurable outputs. It is ideal for visualizing trends of events that
 are occurring in your application/system/error logs. For example, you might use
 logster to graph the number of occurrences of HTTP response code that appears in
 your web server logs.
@@ -12,13 +11,19 @@ each successive execution only inspects new log entries. In other words, a 1
 minute crontab entry for logster would allow you to generate near real-time
 trends in the configured output for anything you want to measure from your logs.
 
-This tool is made up of a framework script, logster, and parsing scripts that
+This tool is made up of a framework script, logster, and parsing classes that
 are written to accommodate your specific log format. Sample parsers are
-included in this distribution. The parser scripts essentially read a log file
+included in this distribution. The parser classes essentially read a log file
 line by line, apply a regular expression to extract useful data from the lines
 you are interested in, and then aggregate that data into metrics that will be
-submitted to the configured output. Take a look through the sample parsers, which
-should give you some idea of how to get started writing your own.
+submitted to the configured output. The sample parsers should give you some idea
+of how to get started writing your own. A list of available parsers can be
+found on the [Parsers](./docs/parsers.md) page.
+
+Graphite, Ganglia, Amazon CloudWatch, Nagios, StatsD and stdout outputs are
+provided, and Logster also supports the use of third-party output classes.
+A list of available output classes can be found on the [Outputs](./docs/outputs.md)
+page.
 
 
 ## History
@@ -74,9 +79,7 @@ Once you have logtail or Pygtail installed, install Logster using the `setup.py`
 
 ## Usage
 
-You can test logster from the command line. There are two sample parsers:
-SampleLogster, which generates stats from an Apache access log; and
-Log4jLogster, which generates stats from a log4j log. The --dry-run option will
+You can test logster from the command line.  The --dry-run option will
 allow you to see the metrics being generated on stdout rather than sending them
 to your configured output.
 
@@ -120,45 +123,17 @@ Additional usage details can be found with the -h option:
                             Options to pass to the logster parser such as "-o
                             VALUE --option2 VALUE". These are parser-specific and
                             passed directly to the parser.
-      --gmetric-options=GMETRIC_OPTIONS
-                            Options to pass to gmetric such as "-d 180 -c
-                            /etc/ganglia/gmond.conf" (default). These are passed
-                            directly to gmetric.
-      --graphite-host=GRAPHITE_HOST
-                            Hostname and port for Graphite collector, e.g.
-                            graphite.example.com:2003
-      --graphite-protocol=GRAPHITE_PROTOCOL
-                            Specify graphite socket protocol. Options are tcp and
-                            udp. Defaults to tcp.
-      --statsd-host=STATSD_HOST
-                            Hostname and port for statsd collector, e.g.
-                            statsd.example.com:8125
-      --aws-key=AWS_KEY     Amazon credential key
-      --aws-secret-key=AWS_SECRET_KEY
-                            Amazon credential secret key
-      --nsca-host=NSCA_HOST
-                            Hostname and port for NSCA daemon, e.g.
-                            nsca.example.com:5667
-      --nsca-service-hostname=NSCA_SERVICE_HOSTNAME
-                            <host_name> value to use in nsca passive service
-                            check. Default is "localhost"
       -s STATE_DIR, --state-dir=STATE_DIR
                             Where to store the tailer state file.  Default
                             location /var/run
       -l LOG_DIR, --log-dir=LOG_DIR
                             Where to store the logster logfile.  Default location
                             /var/log/logster
-      --log-conf=LOG_CONFIGURATION_FILE
-                            Location of the logging configuration file.
-                            Default is None and will use the default logging
-                            configuration (rotating file)
+      --log-conf=LOG_CONF   Logging configuration file. None by default
       -o OUTPUT, --output=OUTPUT
                             Where to send metrics (can specify multiple times).
-                            Choices are 'graphite', 'ganglia', 'cloudwatch',
-                            'nsca' , 'statsd', or 'stdout'.
-      --stdout-separator=STDOUT_SEPARATOR
-                            Seperator between prefix/suffix and name for stdout.
-                            Default is "_".
+                            Choices are statsd, stdout, cloudwatch, graphite,
+                            ganglia, nsca or a fully qualified Python class name
       -d, --dry-run         Parse the log file but send stats to standard output.
       -D, --debug           Provide more verbose logging for debugging.
 
@@ -173,6 +148,4 @@ Additional usage details can be found with the -h option:
 - Send a pull request to the etsy/logster project.
 
 If you have questions, you can find us on IRC in the `#codeascraft` channel on Freenode.
-
-
 

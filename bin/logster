@@ -288,7 +288,7 @@ def main():
 
     # Check for lock file so we don't run multiple copies of the same parser
     # simultaneuosly. This will happen if the log parsing takes more time than
-    # the cron period, which is likely on first run if the logfile is huge.
+    # the cron period.
     try:
         lockfile = start_locking(lock_file)
     except LockingError as e:

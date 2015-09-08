@@ -55,12 +55,15 @@ class LockingError(Exception):
 
 
 class LogsterOutput(object):
+    """ Base class for logster outputs"""
     def __init__(self, parser, options, logger):
         self.options = options
         self.logger = logger
         self.dry_run = options.dry_run
 
     def get_metric_name(self, metric, separator="."):
+        """ Convenience method for contructing metric names
+             Takes into account any supplied prefix/suffix options"""
         metric_name = metric.name
         if self.options.metric_prefix:
             metric_name = self.options.metric_prefix + separator + metric_name
@@ -68,3 +71,6 @@ class LogsterOutput(object):
             metric_name = metric_name + separator + self.options.metric_suffix
         return metric_name
 
+    def submit(self, metrics):
+        """Send metrics to the specific output"""
+        raise RuntimeError("Implement me!")
