@@ -24,18 +24,17 @@ Interface](./output_interface.md). Multiple outputs can be used at once: use the
 `--output` (`-o`) commandline option repeatedly to specify the output classes
 you'd like to use.
 
-There are a set of third-party outputs available. You'll need to make sure the
-class is available on the [search path][search_path] in order to use it.
 
 ## Available Third-party outputs
 - 
 
 If you have an output you'd like to be included here, please open a pull
-request with a link to its source/GitHub repo
+request with a link to its source/GitHub repo and a brief description of its
+use.
 
 Built-in outputs can be referenced using their short name (`graphite`, `ganglia`
-etc), but to use third-party outputs you must specify a fully-qualified module
-and class name available on the [search path][search_path].
+etc). To use third-party outputs you must specify a fully-qualified module
+and class name that's available on the [search path][search_path].
 
 [graphite]: http://graphite.wikidot.com
 [ganglia]: http://ganglia.info/
