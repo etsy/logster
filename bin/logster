@@ -66,18 +66,18 @@ state_dir = "/var/run"
 
 
 # Find all built-in output classes and store them against their shortname
-builtin_output_classes = dict(
-    [(cls.shortname, cls) for name, cls in inspect.getmembers(logster.outputs.builtin)
-        if inspect.isclass(cls) and issubclass(cls, LogsterOutput) and not cls is LogsterOutput
-    ]
-)
+# Built-in output classes are in the logster.outputs.builtin module, extending LogsterOutput
+builtin_outputs = dict([(cls.shortname, cls)
+    for _, cls in inspect.getmembers(logster.outputs.builtin)
+    if inspect.isclass(cls) and issubclass(cls, LogsterOutput) and not cls is LogsterOutput
+])
 
 
 # optparse callback to locate output class by shortname or full path
 def load_output_klass(option, opt, value, parser):
     outputs = getattr(parser.values, option.dest) if getattr(parser.values, option.dest) else []
 
-    output_klass = builtin_output_classes.get(value)
+    output_klass = builtin_outputs.get(value)
     if not output_klass:
         # Assume full path if shortname not found in builtin outputs
         try:
@@ -147,7 +147,7 @@ cmdline.add_option('--log-conf', action='store', default=None,
                     help='Logging configuration file. None by default')
 cmdline.add_option('--output', '-o', action='callback', callback=load_output_klass, type="string", dest="output", metavar="OUTPUT",
                    help="Where to send metrics (can specify multiple times).\
-                         Choices are %s or a fully qualified Python class name" % ', '.join(builtin_output_classes.keys()))
+                         Choices are %s or a fully qualified Python class name" % ', '.join(builtin_outputs.keys()))
 cmdline.add_option('--dry-run', '-d', action='store_true', default=False,
                     help='Parse the log file but send stats to standard output.')
 cmdline.add_option('--debug', '-D', action='store_true', default=False,
