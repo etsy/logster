@@ -14,6 +14,9 @@ class StatsdOutput(LogsterOutput):
 
     def __init__(self, parser, options, logger):
         super(StatsdOutput, self).__init__(parser, options, logger)
+        if not options.statsd_host:
+            parser.print_help()
+            parser.error("You must supply --statsd-host when using 'statsd' as an output type.")
         self.statsd_host = options.statsd_host
 
 
@@ -28,6 +31,6 @@ class StatsdOutput(LogsterOutput):
 
             if (not self.dry_run):
                 udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                udp_sock.sendto(metric_string, (host[0], int(host[1])))
+                udp_sock.sendto(bytes(metric_string, 'ascii'), (host[0], int(host[1])))
             else:
                 print("%s %s" % (self.statsd_host, metric_string))
