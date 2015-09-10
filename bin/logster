@@ -57,20 +57,12 @@ from math import floor
 # Local dependencies
 from logster.logster_helper import LogsterParsingException, LockingError, LogsterOutput
 from logster.tailers.logtailtailer import LogtailTailer
-import logster.outputs.builtin
+from logster.outputs.builtin import builtin_outputs
 
 
 # Globals
 log_dir = "/var/log/logster"
 state_dir = "/var/run"
-
-
-# Find all built-in output classes and store them against their shortname
-# Built-in output classes are in the logster.outputs.builtin module, extending LogsterOutput
-builtin_outputs = dict([(cls.shortname, cls)
-    for _, cls in inspect.getmembers(logster.outputs.builtin)
-    if inspect.isclass(cls) and issubclass(cls, LogsterOutput) and not cls is LogsterOutput
-])
 
 
 # optparse callback to locate output class by shortname or full path
