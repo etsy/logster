@@ -367,6 +367,7 @@ def end_locking(lockfile_fd, lockfile_name):
         raise LockingError("Cannot release logster lock (%s)" % lockfile_name)
 
     try:
+        lockfile_fd.close()
         os.unlink(lockfile_name)
     except OSError as e:
         raise LockingError("Cannot unlink %s" % lockfile_name)
