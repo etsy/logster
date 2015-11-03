@@ -173,6 +173,9 @@ if (options.log_conf):
 if (options.debug):
     logger.setLevel(logging.DEBUG)
 
+if (not os.path.isdir(state_dir)):
+    os.mkdir(state_dir)
+
 
 ## This provides a lineno() function to make it easy to grab the line
 ## number that we're on (for logging)
