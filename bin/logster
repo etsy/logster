@@ -48,7 +48,6 @@ import optparse
 import stat
 import logging.handlers
 import logging.config
-import fcntl
 import socket
 import traceback
 import platform
@@ -73,6 +72,8 @@ cmdline = optparse.OptionParser(usage="usage: %prog [options] parser logfile",
     description="Tail a log file and filter each line to generate metrics that can be sent to common monitoring packages.")
 cmdline.add_option('--tailer', '-t', action='store', default='logtail',
                     choices=('logtail', 'pygtail'), help='Specify which tailer to use. Options are logtail and pygtail. Default is \"%default\".')
+cmdline.add_option('--locker', action='store', default='fcntl',
+                    choices=('fcntl', 'portalocker'), help='Specify which file locker to use. Options are fcntl and portalocker. Default is \"%default\".')
 cmdline.add_option('--logtail', action='store', default=LogtailTailer.default_logtail_path,
                     help='Specify location of logtail. Default \"%default\"')
 cmdline.add_option('--metric-prefix', '-p', action='store',
@@ -133,6 +134,13 @@ if options.tailer == 'pygtail':
     tailer_klass = PygtailTailer
 else:
     tailer_klass = LogtailTailer
+
+if options.locker == 'portalocker':
+    import portalocker
+    lock_exception_klass = portalocker.LockException
+else:
+    import fcntl
+    lock_exception_klass = IOError
 
 if not options.output:
     cmdline.print_help()
@@ -345,9 +353,12 @@ def start_locking(lockfile_name):
     f = open(lockfile_name, 'w')
 
     try:
-        fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        if options.locker == 'portalocker':
+            portalocker.lock(f, portalocker.LOCK_EX | portalocker.LOCK_NB)
+        else:
+            fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
         f.write("%s" % os.getpid())
-    except IOError:
+    except lock_exception_klass:
         # Would be better to also check the pid in the lock file and remove the
         # lock file if that pid no longer exists in the process table.
         raise LockingError("Cannot acquire logster lock (%s)" % lockfile_name)
@@ -359,11 +370,14 @@ def start_locking(lockfile_name):
 def end_locking(lockfile_fd, lockfile_name):
     """ Release a lock via a provided file descriptor. """
     try:
-        if platform.system() == "SunOS": # GH issue #17
-            fcntl.flock(lockfile_fd, fcntl.LOCK_UN)
+        if options.locker == 'portalocker':
+            portalocker.unlock(lockfile_fd) # uses fcntl.LOCK_UN on posix (in contrast with the flock()ing below)
         else:
-            fcntl.flock(lockfile_fd, fcntl.LOCK_UN | fcntl.LOCK_NB)
-    except IOError as e:
+            if platform.system() == "SunOS": # GH issue #17
+                fcntl.flock(lockfile_fd, fcntl.LOCK_UN)
+            else:
+                fcntl.flock(lockfile_fd, fcntl.LOCK_UN | fcntl.LOCK_NB)
+    except lock_exception_klass:
         raise LockingError("Cannot release logster lock (%s)" % lockfile_name)
 
     try:

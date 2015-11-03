@@ -55,6 +55,17 @@ Logster supports two methods for gathering data from a logfile:
    To use Pygtail, supply the ```--tailer=pygtail``` option on the Logster
    commandline.
 
+Also, Logster supports two methods for locking files (which it has to do):
+
+1. By default, Logster uses ```fcntl.flock```.
+
+2. Optionally, Logster can use the "Portalocker" Python module instead of fcntl
+   (which is not available on Windows). You can install Portalocker using pip,
+   similar to Pygtail above.
+
+   To use Portalocker, supply the ```--locker=portalocker``` option on the
+   Logster commandline.
+
 
 Once you have logtail or Pygtail installed, install Logster using the `setup.py` file:
 
