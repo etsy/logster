@@ -136,6 +136,8 @@ Additional usage details can be found with the -h option:
       --aws-key=AWS_KEY     Amazon credential key
       --aws-secret-key=AWS_SECRET_KEY
                             Amazon credential secret key
+      --librato-user=user@example.com:APIKEYHEREDEADBEEF
+                            Email address and API Key of Librato Metrics users account.
       --nsca-host=NSCA_HOST
                             Hostname and port for NSCA daemon, e.g.
                             nsca.example.com:5667
@@ -155,7 +157,7 @@ Additional usage details can be found with the -h option:
       -o OUTPUT, --output=OUTPUT
                             Where to send metrics (can specify multiple times).
                             Choices are 'graphite', 'ganglia', 'cloudwatch',
-                            'nsca' , 'statsd', or 'stdout'.
+                            'librato', 'nsca' , 'statsd', or 'stdout'.
       --stdout-separator=STDOUT_SEPARATOR
                             Seperator between prefix/suffix and name for stdout.
                             Default is "_".
