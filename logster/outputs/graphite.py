@@ -49,7 +49,7 @@ class GraphiteOutput(LogsterOutput):
                 self.logger.debug("Submitting Graphite metric: %s" % metric_string)
 
                 if (not self.dry_run):
-                    s.sendall(bytes("%s\n" % metric_string, 'ascii'))
+                    s.sendall(("%s\n" % metric_string).encode('ascii'))
                 else:
                     print("%s %s" % (self.graphite_host, metric_string))
         finally:

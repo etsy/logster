@@ -83,7 +83,7 @@ class CloudWatch(object):
             else:
                 signature = hmac.new( key=bytes(self.secret_key), msg=bytes(string_to_sign), digestmod=hashlib.sha256).digest()
         except TypeError:
-            signature = hmac.new( key=bytes(self.secret_key, "utf-8"), msg=bytes(string_to_sign, "utf-8"), digestmod=hashlib.sha256).digest()
+            signature = hmac.new( key=self.secret_key.encode("utf-8"), msg=string_to_sign.encode("utf-8"), digestmod=hashlib.sha256).digest()
 
         signature = base64.encodestring(signature).strip()
         urlencoded_signature = quote_plus(signature)
