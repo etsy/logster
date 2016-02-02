@@ -1,4 +1,4 @@
-# Logster - generate metrics from logfiles [![Build Status](https://secure.travis-ci.org/etsy/logster.png)](http://travis-ci.org/etsy/logster)
+# Logster - generate metrics from logfiles [![Build Status](https://secure.travis-ci.org/etsy/logster.svg)](http://travis-ci.org/etsy/logster)
 
 Logster is a utility for reading log files and generating metrics to
 configurable outputs. It is ideal for visualizing trends of events that
