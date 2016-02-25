@@ -45,6 +45,10 @@ class GraphiteOutput(LogsterOutput):
             for metric in metrics:
                 metric_name = self.get_metric_name(metric)
 
+                # Spaces in graphite metric names will cause failure
+                if ' ' in metric_name:
+                    self.logger.error('Invalid metric name, spaces not allowed')
+
                 metric_string = "%s %s %s" % (metric_name, metric.value, metric.timestamp)
                 self.logger.debug("Submitting Graphite metric: %s" % metric_string)
 
