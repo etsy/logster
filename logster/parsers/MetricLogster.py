@@ -90,10 +90,9 @@ class MetricLogster(LogsterParser):
     def get_state(self, duration):
         '''Run any necessary calculations on the data collected from the logs
         and return a list of metric objects.'''
-        duration = float(duration)
-        metrics = []
-        if duration > 0:
-            metrics += [MetricObject(counter, self.counts[counter]/duration) for counter in self.counts]
+
+        metrics = [MetricObject(counter, self.counts[counter]) for counter in self.counts]
+
         for time_name in self.times:
             values = self.times[time_name]['values']
             unit = self.times[time_name]['unit']
