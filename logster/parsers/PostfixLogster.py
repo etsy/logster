@@ -35,10 +35,15 @@ class PostfixLogster(LogsterParser):
         self.numBounced = 0
         self.totalDelay = 0
         self.numRbl = 0
+        self.incomingConnections = 0
+        self.incomingTLSConnections = 0
+        self.outgoingTLSConnections = 0
+        self.outgoingUntrustedTLSConnections = 0
+        self.incomingUntrustedTLSConnections = 0
         
         # Regular expression for matching lines we are interested in, and capturing
         # fields from the line (in this case, http_status_code).
-        self.reg = re.compile('.*delay=(?P<send_delay>[^,]+),.*status=(?P<status>(sent|deferred|bounced))')
+        self.reg = re.compile('(.*delay=(?P<send_delay>[^,]+),.*status=(?P<status>(sent|deferred|bounced)))|(.*?(?P<untrustedtls>(Untrusted|Anonymous))*(?P<tls> TLS connection established )(?P<direction>(to|from)).*)|(.*nrcpt=(?P<incoming>[^ ]+).*queue active.*)')
            
     def parse_line(self, line):
         '''This function should digest the contents of one line at a time, updating
@@ -57,6 +62,17 @@ class PostfixLogster(LogsterParser):
                   self.numDeferred += 1
                elif (linebits['status'] == 'bounced'):
                   self.numBounced += 1
+               elif (linebits['incoming'] != None):
+                  self.incomingConnections +=1
+               elif (linebits['tls'] != None ):
+                  if (linebits['direction'] == 'to'):
+                      self.outgoingTLSConnections +=1
+                      if (linebits['untrustedtls'] != None ):
+                          self.outgoingUntrustedTLSConnections +=1
+                  if (linebits['direction'] == 'from'):
+                      self.incomingTLSConnections +=1
+                      if (linebits['untrustedtls'] != None ):
+                          self.incomingUntrustedTLSConnections +=1
 
         except Exception as e:
             raise LogsterParsingException("regmatch or contents failed with %s" % e)
@@ -70,6 +86,10 @@ class PostfixLogster(LogsterParser):
         pctDeferred = 0.0
         pctSent = 0.0
         pctBounced = 0.0
+        pctOutTLS = 0.0
+        pctOutUTLS = 0.0
+        pctInTLS = 0.0
+        pctInUTLS = 0.0
         avgDelay = 0
         mailTxnsSec = 0
         mailSentSec = 0
@@ -78,7 +98,15 @@ class PostfixLogster(LogsterParser):
         if (totalTxns > 0):
            pctDeferred = (float(self.numDeferred) / totalTxns) * 100
            pctSent = (float(self.numSent) / totalTxns) * 100
-           pctBounced = (float(self.numBounced) / totalTxns ) * 100
+           pctBounced = (float(self.numBounced) / totalTxns) * 100
+           pctOutTLS = (float(self.outgoingTLSConnections) / totalTxns) * 100
+        if (self.incomingConnections > 0):
+           pctInTLS = (float(self.incomingTLSConnections) / self.incomingConnections) * 100
+        if (self.incomingTLSConnections > 0):
+           pctInUTLS = (float(self.incomingUntrustedTLSConnections) / self.incomingTLSConnections) * 100
+        if (self.outgoingTLSConnections > 0):
+           pctOutUTLS = (float(self.outgoingUntrustedTLSConnections) / self.outgoingTLSConnections) * 100
+
 
         if (self.numSent > 0):
            avgDelay = self.totalDelay / self.numSent
@@ -98,4 +126,16 @@ class PostfixLogster(LogsterParser):
             MetricObject("mailTxnsSec", mailTxnsSec, "Transactions per sec"),
             MetricObject("mailSentSec", mailSentSec, "Sends per sec"),
             MetricObject("avgDelay", avgDelay, "Average Sending Delay"),
+            MetricObject("totalTxns", totalTxns, "Total Outgoing delivery attempts"),
+            MetricObject("totalRxns", self.incomingConnections , "Total Messages Received"),
+            #Outgoing TLS
+            MetricObject("pctOutTLS", pctOutTLS, "Percentage of successfull TLS connections on delivery attempts"),
+            MetricObject("pctOutUntrustedTLS", pctOutUTLS, "Percentage of untrusted Connection on successfull TLS connections"),
+            MetricObject("totalOutTLS", self.outgoingTLSConnections, "Total TLS Connections on delivery attempts"),
+            MetricObject("totalOutUntrustedTLS", self.outgoingUntrustedTLSConnections, "Total untrusted TLS Connections on delivery attempts"),
+            # Incoming TLS
+            MetricObject("pctInTLS", pctInTLS, "Percentage of successfull TLS connections on delivery attempts"),
+            MetricObject("pctInUntrustedTLS", pctInUTLS, "Percentage of untrusted Connection on successfull TLS connections"),
+            MetricObject("totalInTLS", self.incomingTLSConnections, "Total TLS Connections on delivery attempts"),
+            MetricObject("totalInUntrustedInTLS", self.incomingUntrustedTLSConnections, "Total untrusted TLS Connections on delivery attempts"),
         ]      
