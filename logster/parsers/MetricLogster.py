@@ -57,10 +57,13 @@ class MetricLogster(LogsterParser):
         optparser = optparse.OptionParser()
         optparser.add_option('--percentiles', '-p', dest='percentiles', default='90',
                             help='Comma-separated list of integer percentiles to track: (default: "90")')
+        optparser.add_option('--raw', action="store_true", dest='raw',
+                            help='Send raw metric to graphite, do not take time duration into metric calculation')
 
         opts, args = optparser.parse_args(args=options)
 
         self.percentiles = opts.percentiles.split(',')
+        self.raw_data = opts.raw
 
         # General regular expressions, expecting the metric name to be included in the log file.
 
@@ -92,8 +95,10 @@ class MetricLogster(LogsterParser):
         and return a list of metric objects.'''
         duration = float(duration)
         metrics = []
-        if duration > 0:
+        if duration > 0 and not self.raw_data:
             metrics += [MetricObject(counter, self.counts[counter]/duration) for counter in self.counts]
+        elif self.raw_data:
+            metrics += [MetricObject(counter, self.counts[counter]) for counter in self.counts]
         for time_name in self.times:
             values = self.times[time_name]['values']
             unit = self.times[time_name]['unit']
