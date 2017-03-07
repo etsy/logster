@@ -75,16 +75,16 @@ class SampleLogster(LogsterParser):
             raise LogsterParsingException("regmatch or contents failed with %s" % e)
 
 
-    def get_state(self, duration):
-        '''Run any necessary calculations on the data collected from the logs
-        and return a list of metric objects.'''
-        self.duration = float(duration)
+#    def get_state(self, duration):
+#        '''Run any necessary calculations on the data collected from the logs
+#        and return a list of metric objects.'''
+#        self.duration = float(duration)
 
         # Return a list of metrics objects
         return [
-            MetricObject("http_1xx", (self.http_1xx / self.duration), "Responses per sec"),
-            MetricObject("http_2xx", (self.http_2xx / self.duration), "Responses per sec"),
-            MetricObject("http_3xx", (self.http_3xx / self.duration), "Responses per sec"),
-            MetricObject("http_4xx", (self.http_4xx / self.duration), "Responses per sec"),
-            MetricObject("http_5xx", (self.http_5xx / self.duration), "Responses per sec"),
+            MetricObject("http_1xx", (self.http_1xx), "Responses per sec"),
+            MetricObject("http_2xx", (self.http_2xx), "Responses per sec"),
+            MetricObject("http_3xx", (self.http_3xx), "Responses per sec"),
+            MetricObject("http_4xx", (self.http_4xx), "Responses per sec"),
+            MetricObject("http_5xx", (self.http_5xx), "Responses per sec"),
         ]
