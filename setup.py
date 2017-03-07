@@ -11,7 +11,7 @@ setup(
     version='1.0.1',
     description='Parse log files, generate metrics for Graphite and Ganglia',
     author='Etsy',
-    url='https://github.com/etsy/logster',
+    url='https://github.com/pratikp09/logster',
     packages=[
         'logster',
         'logster/parsers',
