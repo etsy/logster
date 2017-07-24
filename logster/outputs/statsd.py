@@ -23,6 +23,7 @@ class StatsdOutput(LogsterOutput):
     def submit(self, metrics):
         if (not self.dry_run):
             host = self.statsd_host.split(':')
+            host[0] = socket.gethostbyname(host[0])
 
         for metric in metrics:
             metric_name = self.get_metric_name(metric)
