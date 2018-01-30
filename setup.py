@@ -22,8 +22,14 @@ setup(
         'pygtail>=0.5.1'
     ],
     zip_safe=False,
-    scripts=[
-        'bin/logster'
-    ],
+    # To provide executable scripts, use entry points in preference to the
+    # "scripts" keyword. Entry points provide cross-platform support and allow
+    # `pip` to create the appropriate form of executable for the target
+    # platform.
+    entry_points={  # Optional
+        'console_scripts': [
+            'logster=logster.logster_cli:main',
+        ],
+    },
     license='GPL3',
 )
