@@ -1,7 +1,6 @@
 '''
-Created on 16 jan 2015
-
-@author: gbykov
+Created on 16 jan 2018
+@author: Grigory Bykov <gbykov@hotbox.ru>
 '''
 import unittest.mock
 import time

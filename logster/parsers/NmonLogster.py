@@ -1,9 +1,13 @@
 #!/usr/bin/python -tt
 # -*- coding: utf-8 -*-
 '''
-Created on 16 jan 2018
-
-@author: gbvbg
+###  Author: Grigory Bykov <gbykov@hotbox.ru>
+###
+###  Parse nmon (https://en.wikipedia.org/wiki/Nmon) files
+###
+###  For example:
+###  sudo ./logster --output=stdout NmonLogster /var/log/linux_b16.nmon --parser-options 
+###
 '''
 
 import time

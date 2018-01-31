@@ -23,6 +23,7 @@ Logster includes the following built-in parsers:
   access.log
 * [SampleLogster][samplelogster]: count the number of response codes found in an Apache access
   log
+* [NmonLogster][nmonlogster]: parse files produced by [nmon][nmon]
 
 You can use the provided parsers, or you can use your own parsers by passing
 the complete module and parser name. In this case, the name of the parser does
@@ -53,3 +54,5 @@ use.
 [samplelogster]: ../logster/parsers/SampleLogster.py
 [squid]: http://www.squid-cache.org/
 [postfix]: http://www.postfix.org/
+[nmonlogster]: ../logster/parsers/NmonLogster.py
+[nmon]: https://en.wikipedia.org/wiki/Nmon
