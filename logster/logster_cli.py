@@ -1,5 +1,9 @@
 #!/usr/bin/python -tt
 # -*- coding: utf-8 -*-
+'''
+This is bin/logster rewritten by Grigory Bykov<gbykov@hotbox.ru> to enble test main function and extended 
+for support nmon files specifics.
+'''
 
 ###
 ###  logster
