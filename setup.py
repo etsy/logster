@@ -23,6 +23,7 @@ setup(
     ],
     tests_require = [
         'mock>=2.0.0;python_version<"3.3"'
+        'contextlib2;python_version<"3.5"'
     ],
     zip_safe=False,
     # To provide executable scripts, use entry points in preference to the
