@@ -21,6 +21,9 @@ setup(
     install_requires = [
         'pygtail>=0.5.1'
     ],
+    tests_require = [
+        'mock>=2.0.0;python_version<"3.3"'
+    ],
     zip_safe=False,
     # To provide executable scripts, use entry points in preference to the
     # "scripts" keyword. Entry points provide cross-platform support and allow

@@ -2,7 +2,12 @@
 Created on 16 jan 2018
 @author: Grigory Bykov <gbykov@hotbox.ru>
 '''
-import unittest.mock
+
+try:
+    from unittest import mock 
+except ImportError:
+    from mock import mock
+import unittest    
 import time
 from datetime import datetime
 from io import StringIO
@@ -209,7 +214,7 @@ class Test(unittest.TestCase):
         # [-p PREFIX] [-r ROUND] [-s STARTDATE] [filename]
         file_path = os.path.join('..', 'tests', 'data', 'linux_nmon16g.nmon')
         with redirect_stdout(out):
-            with unittest.mock.patch('sys.argv',
+            with mock.patch('sys.argv',
                                      ['logster', 
                                       '-t', 'pygtail',
                                       'NmonLogster',
@@ -245,7 +250,7 @@ class Test(unittest.TestCase):
         # [-p PREFIX] [-r ROUND] [-s STARTDATE] [filename]
                 
         with redirect_stdout(out):
-            with unittest.mock.patch('sys.argv',
+            with mock.patch('sys.argv',
                                      ['logster', 
                                       '-t', 'pygtail',
                                       'NmonLogster',
@@ -277,14 +282,14 @@ class Test(unittest.TestCase):
                 dstfile.write(srcfile.read())
         
         with redirect_stdout(out):
-            with unittest.mock.patch('sys.argv',
-                                     ['logster', 
-                                      '-t', 'pygtail',
-                                      'NmonLogster',
-                                      '-o', 'stdout',
-                                      '--locker=portalocker',
-                                      '-l', 'run', '-s', 'run',
-                                      dst]):
+            with mock.patch('sys.argv',
+                         ['logster', 
+                          '-t', 'pygtail',
+                          'NmonLogster',
+                          '-o', 'stdout',
+                          '--locker=portalocker',
+                          '-l', 'run', '-s', 'run',
+                          dst]):
                 logster_cli.main()
 
         output = out.getvalue().split('\n')
@@ -301,7 +306,7 @@ class Test(unittest.TestCase):
         
         file_path = os.path.join('..', 'tests', 'data', 'linux_nmon16g.nmon')
         with redirect_stderr (out):
-            with unittest.mock.patch('sys.argv',
+            with mock.patch('sys.argv',
                                      ['logster', 
                                       '-t', 'pygtail',
                                       'NmonLogster',
