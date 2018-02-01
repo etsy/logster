@@ -11,7 +11,12 @@ import unittest
 import time
 from datetime import datetime
 from io import StringIO
-from contextlib import redirect_stdout, redirect_stderr
+
+try:
+    from contextlib import redirect_stdout, redirect_stderr
+except ImportError:
+    from contextlib2 import redirect_stdout, redirect_stderr
+    
 import fileinput
 from logster.parsers.NmonLogster import NmonLogster
 import subprocess
