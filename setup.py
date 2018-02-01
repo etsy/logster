@@ -22,7 +22,7 @@ setup(
         'pygtail>=0.5.1'
     ],
     tests_require = [
-        'mock>=2.0.0;python_version<"3.3"'
+        'mock>=2.0.0;python_version<"3.3"',
         'contextlib2;python_version<"3.5"'
     ],
     zip_safe=False,
