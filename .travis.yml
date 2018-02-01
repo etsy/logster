@@ -4,7 +4,9 @@ python:
   - "2.7"
   - "3.3"
 # command to install dependencies
-install: "pip install nose"
+install:
+  - pip install nose
+  - pip install -e .
 script: PYTHONPATH=`pwd`/parsers nosetests tests/
 branches:
   only:
