@@ -9,7 +9,8 @@ tests_require = [
         'mock>=2.0.0;python_version<"3.3"',
         'contextlib2;python_version<"3.5"',
         'pathlib;python_version<="3.3"', 
-        'nose'
+        'nose',
+        'portalocker'
     ]
 
 setup(
