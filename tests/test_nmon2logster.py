@@ -13,10 +13,10 @@ from datetime import datetime
 from io import StringIO
 from contextlib import redirect_stdout, redirect_stderr
 import fileinput
-from parsers.NmonLogster import NmonLogster
+from logster.parsers.NmonLogster import NmonLogster
 import subprocess
 from pathlib import Path
-import logster_cli
+import logster.logster_cli
 import os
 import shutil
 
@@ -99,7 +99,7 @@ class Test(unittest.TestCase):
         
 
     def test_parse_line(self):
-        path = os.path.join('..', 'tests', 'data', 'linux_nmon14g.nmon')
+        path = os.path.join('.', 'tests', 'data', 'linux_nmon14g.nmon')
         for line in fileinput.input(path):
             self.cvt.parse_line(line)
 #       print out.getvalue()
@@ -135,7 +135,8 @@ class Test(unittest.TestCase):
         
     def test_round_300(self):
         parser = NmonLogster('--roundTo 300')
-        for line in fileinput.input("./data/linux_nmon14g.nmon"):
+        path = os.path.join('.', 'tests', 'data', 'linux_nmon14g.nmon')
+        for line in fileinput.input(path):
             parser.parse_line(line)
         output = parser.get_state(0)
         length = len(output)
@@ -163,7 +164,7 @@ class Test(unittest.TestCase):
 
     def test_date_shift(self):
         parser = NmonLogster('--startdate=24.06.2015')
-        path = os.path.join('..', 'tests', 'data', 'linux_nmon14g.nmon')
+        path = os.path.join('.', 'tests', 'data', 'linux_nmon14g.nmon')
         for line in fileinput.input(path):
             parser.parse_line(line)
         output = parser.get_state(0)
@@ -184,7 +185,7 @@ class Test(unittest.TestCase):
 
     def test_time_shift(self):
         parser = NmonLogster('--startdate=24.06.2015')
-        path = os.path.join('..', 'tests', 'data', 'linux_nmon14g.nmon')
+        path = os.path.join('.', 'tests', 'data', 'linux_nmon14g.nmon')
         for line in fileinput.input(path):
             parser.parse_line(line)
         output = parser.get_state(0)
@@ -206,13 +207,16 @@ class Test(unittest.TestCase):
         
 
     def test_main(self):
-        state_path = os.path.join('..', 'tests', 'run',
-                                  'pygtail-logster.parsers.NmonLogster.NmonLogster..-tests-data-linux_nmon16g.nmon.state')
+        state_path = os.path.join('.', 'tests', 'run',
+                                  'pygtail-logster.parsers.NmonLogster.NmonLogster.-tests-data-linux_nmon16g.nmon.state')
+                                   
+        log_state_path = os.path.join('.', 'tests', 'run')
+        
         if os.path.exists(state_path):
             os.remove( state_path )
         out = StringIO()
         # [-p PREFIX] [-r ROUND] [-s STARTDATE] [filename]
-        file_path = os.path.join('..', 'tests', 'data', 'linux_nmon16g.nmon')
+        file_path = os.path.join('.', 'tests', 'data', 'linux_nmon16g.nmon')
         with redirect_stdout(out):
             with mock.patch('sys.argv',
                                      ['logster', 
@@ -220,9 +224,10 @@ class Test(unittest.TestCase):
                                       'NmonLogster',
                                       '-o', 'stdout',
                                       '--locker=portalocker',
-                                      '-l', 'run', '-s', 'run',
+                                      '-l', log_state_path,
+                                      '-s', log_state_path,
                                       file_path]):
-                logster_cli.main()
+                logster.logster_cli.main()
 
         output = out.getvalue().split('\n')
         #print(output)
@@ -234,16 +239,16 @@ class Test(unittest.TestCase):
                           "unspecified.vagrant-ubuntu-trusty-64.nmon.DISKBSIZE.sda1 6.0"), output[length-2])
     
     def test_main_twice(self):
-        src = os.path.join('..', 'tests', 'data',
+        src = os.path.join('.', 'tests', 'data',
                                   'linux_nmon16g.nmon.1')
-        dst = os.path.join('..', 'tests', 'run',
+        dst = os.path.join('.', 'tests', 'run',
                                   'linux_nmon16g_tmp.nmon')
         
         shutil.copy(src, dst)
         
-        state_path = os.path.join('..', 'tests', 'run',
-                                  'pygtail-logster.parsers.NmonLogster.NmonLogster..-tests-run-linux_nmon16g_tmp.nmon.state')
-        
+        state_path = os.path.join('.', 'tests', 'run',
+                                  'pygtail-logster.parsers.NmonLogster.NmonLogster.-tests-run-linux_nmon16g_tmp.nmon.state')
+        log_state_path = os.path.join('.', 'tests', 'run')
         if os.path.exists(state_path):
             os.remove( state_path )
         out = StringIO()
@@ -256,9 +261,10 @@ class Test(unittest.TestCase):
                                       'NmonLogster',
                                       '-o', 'stdout',
                                       '--locker=portalocker',
-                                      '-l', 'run', '-s', 'run',
+                                      '-l', log_state_path,
+                                      '-s', log_state_path,
                                       dst]):
-                logster_cli.main()
+                logster.logster_cli.main()
 
         output = out.getvalue().split('\n')
         #print(output)
@@ -274,7 +280,7 @@ class Test(unittest.TestCase):
         ZZZZ,T0720,10:54:05,25-JAN-2018
         '''
         out = StringIO()
-        src = os.path.join('..', 'tests', 'data',
+        src = os.path.join('.', 'tests', 'data',
                                   'linux_nmon16g.nmon.2')
         
         with open(dst, 'a') as dstfile:
@@ -288,9 +294,10 @@ class Test(unittest.TestCase):
                           'NmonLogster',
                           '-o', 'stdout',
                           '--locker=portalocker',
-                          '-l', 'run', '-s', 'run',
+                          '-l', log_state_path,
+                          '-s', log_state_path,
                           dst]):
-                logster_cli.main()
+                logster.logster_cli.main()
 
         output = out.getvalue().split('\n')
         #print(output)
@@ -303,8 +310,9 @@ class Test(unittest.TestCase):
     def test_main_parser_help(self):
         
         out = StringIO()
+        log_state_path = os.path.join('.', 'tests', 'run')
         
-        file_path = os.path.join('..', 'tests', 'data', 'linux_nmon16g.nmon')
+        file_path = os.path.join('.', 'tests', 'data', 'linux_nmon16g.nmon')
         with redirect_stderr (out):
             with mock.patch('sys.argv',
                                      ['logster', 
@@ -313,10 +321,11 @@ class Test(unittest.TestCase):
                                       '--parser-help',
                                       '-o', 'stdout',
                                       '--locker=portalocker',
-                                      '-l', 'run', '-s', 'run',
+                                      '-l', log_state_path, 
+                                      '-s', log_state_path,
                                       file_path]):
                 with self.assertRaises(BaseException) as context:
-                    logster_cli.main()
+                    logster.logster_cli.main()
                     
                 self.assertFalse('This throws ' in str(context.exception))    
         
