@@ -10,7 +10,8 @@ except ImportError:
 import unittest    
 import time
 from datetime import datetime
-from io import StringIO
+from io import BytesIO, StringIO
+import sys
 
 try:
     from contextlib import redirect_stdout, redirect_stderr
@@ -25,11 +26,11 @@ import logster.logster_cli
 import os
 import shutil
 
-class Test(unittest.TestCase):
+class TestNmonLogster(unittest.TestCase):
 
     def setUp(self):
 
-        self.out = StringIO()
+        self.out = BytesIO()
         self.cvt = NmonLogster()
         self.cvt.timeShift = None
 
@@ -219,7 +220,9 @@ class Test(unittest.TestCase):
         
         if os.path.exists(state_path):
             os.remove( state_path )
-        out = StringIO()
+         
+        out = BytesIO() if sys.version_info[0] < 3 else StringIO()
+            
         # [-p PREFIX] [-r ROUND] [-s STARTDATE] [filename]
         file_path = os.path.join('.', 'tests', 'data', 'linux_nmon16g.nmon')
         with redirect_stdout(out):
@@ -256,7 +259,9 @@ class Test(unittest.TestCase):
         log_state_path = os.path.join('.', 'tests', 'run')
         if os.path.exists(state_path):
             os.remove( state_path )
-        out = StringIO()
+            
+        out = BytesIO() if sys.version_info[0] < 3 else StringIO()
+        
         # [-p PREFIX] [-r ROUND] [-s STARTDATE] [filename]
                 
         with redirect_stdout(out):
@@ -284,7 +289,7 @@ class Test(unittest.TestCase):
         second run - emulate file append
         ZZZZ,T0720,10:54:05,25-JAN-2018
         '''
-        out = StringIO()
+        out = BytesIO() if sys.version_info[0] < 3 else StringIO()
         src = os.path.join('.', 'tests', 'data',
                                   'linux_nmon16g.nmon.2')
         
@@ -314,7 +319,7 @@ class Test(unittest.TestCase):
 
     def test_main_parser_help(self):
         
-        out = StringIO()
+        out = BytesIO()
         log_state_path = os.path.join('.', 'tests', 'run')
         
         file_path = os.path.join('.', 'tests', 'data', 'linux_nmon16g.nmon')
