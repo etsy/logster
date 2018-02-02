@@ -5,6 +5,13 @@ try:
 except ImportError:
     from distutils.core import setup
 
+tests_require = [
+        'mock>=2.0.0;python_version<"3.3"',
+        'contextlib2;python_version<"3.5"',
+        'pathlib;python_version<="3.3"', 
+        'nose',
+        'portalocker'
+    ]
 
 setup(
     name='logster',
@@ -21,9 +28,17 @@ setup(
     install_requires = [
         'pygtail>=0.5.1'
     ],
+    tests_require = tests_require,
+    extras_require={'test': tests_require},
     zip_safe=False,
-    scripts=[
-        'bin/logster'
-    ],
+    # To provide executable scripts, use entry points in preference to the
+    # "scripts" keyword. Entry points provide cross-platform support and allow
+    # `pip` to create the appropriate form of executable for the target
+    # platform.
+    entry_points={  # Optional
+        'console_scripts': [
+            'logster=logster.logster_cli:main',
+        ],
+    },
     license='GPL3',
 )
