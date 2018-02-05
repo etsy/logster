@@ -1,8 +1,10 @@
-import json
-import os
+from logster.logster_helper import LogsterOutput
 from httplib import *
 
-from logster.logster_helper import LogsterOutput
+import json
+import os
+import jsonpickle
+import platform
 
 
 class InsightsOutput(LogsterOutput):
@@ -18,11 +20,15 @@ class InsightsOutput(LogsterOutput):
                           default=os.getenv('INSIGHTS_API_KEY_ID'), help='New Relic Insights API Insert key')
         parser.add_option('--newrelic_account_number', action='store',
                           default=os.getenv('NEW_RELIC_ACCOUNT'), help='New Relic Account Number')
+        parser.add_option('--integration_type', action='store',
+                          default='standalone', help='Define New Relic Integration Type (ohi or standalone)')
 
     def __init__(self, parser, options, logger):
         super(InsightsOutput, self).__init__(parser, options, logger)
         self.separator = options.stdout_separator
         self.insights_url = 'insights-collector.newrelic.com'
+
+        self.integration_type = options.integration_type
 
         if not options.newrelic_account_number or not options.insights_api_key:
             parser.print_help()
@@ -38,30 +44,39 @@ class InsightsOutput(LogsterOutput):
 
         eventData = []
 
-        for metric in metrics:
-            metric.eventType = self.eventType
-            eventData.append(metric)
-            metric_name = self.get_metric_name(metric, self.separator)
-            """ print("%s %s %s" % (metric.timestamp, metric_name, metric.value)) """
+        if self.integration_type == "standalone":
 
-        try:
-            conn = HTTPSConnection(self.insights_url)
-            headers = {
-                "Content-Type": "application/json",
-                "X-Insert-Key": self.insights_api_key
-            }
+            for metric in metrics:
+                metric.eventType = self.eventType
+                metric.osName = os.name
+                metric.platformSystem = platform.system()
+                metric.platformRelease = platform.release()
+                platform.python_version()
+                eventData.append(metric)
 
-            """ print json.dumps([ob.__dict__ for ob in eventData]) """
-            eee = self.getOHIStructure(eventData)
+            try:
+                conn = HTTPSConnection(self.insights_url)
+                headers = {
+                    "Content-Type": "application/json",
+                    "X-Insert-Key": self.insights_api_key
+                }
 
-            print json.dumps([ob.__dict__ for ob in eee.itervalues()])
+                conn.request("POST", self.full_url, json.dumps([ob.__dict__ for ob in eventData.__iter__()]), headers)
 
-            response = conn.request("POST", self.full_url, json.dumps([ob.__dict__ for ob in eventData.itervalues()]), headers)
+                response = conn.getresponse()
 
-        except Exception as ex:
-            raise Exception("Can't connect ", ex)
+                print response.status, response.reason
 
-    def getOHIStructure(self, metrics):
+            except Exception as ex:
+                raise Exception("Can't connect ", ex)
+        else:
+            for metric in metrics:
+                metric.event_type = self.eventType
+                eventData.append(metric)
+
+            print jsonpickle.encode(self.getohistructure(eventData))
+
+    def getohistructure(self, metrics):
         OHIDataEvent = {}
         OHIDataEvent["name"] = "com.newrelic.ohi"
         OHIDataEvent["protocol_version"] = "1"
