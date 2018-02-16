@@ -29,6 +29,7 @@ you'd like to use.
 - * [New Relic Insights][insights] (`insights`): An Analytics platform that allows for querying, dashboard
   and alerting on the data collected byt logster. Setup details can be found here: [New Relic Insights Output](https://github.com/asomensari/logster/blob/master/logster/outputs/insights.md)
 
+
 If you have an output you'd like to be included here, please open a pull
 request with a link to its source/GitHub repo and a brief description of its
 use.
