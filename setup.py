@@ -19,7 +19,8 @@ setup(
         'logster/outputs'
     ],
     install_requires = [
-        'pygtail>=0.5.1'
+        'pygtail>=0.5.1',
+        'jsonpickle>=0.9.5'
     ],
     zip_safe=False,
     scripts=[
