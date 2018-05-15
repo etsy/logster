@@ -144,6 +144,8 @@ cmdline.add_option('--dry-run', '-d', action='store_true', default=False,
                     help='Parse the log file but send stats to standard output.')
 cmdline.add_option('--debug', '-D', action='store_true', default=False,
                     help='Provide more verbose logging for debugging.')
+cmdline.add_option('--ignore-leftover-locks', '-L', action='store_true', default=False,
+                    help='Set to true if you want to recover logsters leaving the lockfile behind. Only works if your filesystem for locks have globally consistent locking (e.g. no S3FS and friends). Default is: False')
 options, arguments = parse_args(cmdline)
 
 if options.parser_help:
@@ -218,21 +220,33 @@ def submit_stats(parser, duration, outputs):
 
 def start_locking(lockfile_name):
     """ Acquire a lock via a provided lockfile filename. """
+    lock_file_exists = False
     if os.path.exists(lockfile_name):
-        raise LockingError("Lock file (%s) already exists." % lockfile_name)
+        if options.ignore_leftover_locks:
+            lock_file_exists = True
+        else:
+            raise LockingError("Lock file (%s) already exists." % lockfile_name)
 
-    f = open(lockfile_name, 'w')
+    f = open(lockfile_name, 'a')
 
     try:
         if options.locker == 'portalocker':
             portalocker.lock(f, portalocker.LOCK_EX | portalocker.LOCK_NB)
         else:
             fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+
+        # Let's truncate the file in case we had successfully got the lock
+        f.seek(0)
+        f.truncate(0)
         f.write("%s" % os.getpid())
+        if lock_file_exists:
+            logging.warning("Previous run of the logster might have failed, as the lockfile (%s) was found without a process holding it" % lockfile_name)
+
     except lock_exception_klass:
-        # Would be better to also check the pid in the lock file and remove the
-        # lock file if that pid no longer exists in the process table.
-        raise LockingError("Cannot acquire logster lock (%s)" % lockfile_name)
+        if lock_file_exists:
+            raise LockingError("Cannot acquire logster lock (%s) previous instances of the logster might be running" % lockfile_name)
+        else:
+            raise LockingError("Cannot acquire logster lock (%s)" % lockfile_name)
 
     logger.debug("Locking successful")
     return f
