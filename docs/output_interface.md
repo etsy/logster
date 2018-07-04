@@ -33,7 +33,7 @@ instance:
 * `add_options(cls, parser)`: Called during optparse option parsing to add custom
   commandline options for this output.
 
-  Parameters: `parser` is teh optparse.OptionParser instance.
+  Parameters: `parser` is the optparse.OptionParser instance.
 
 
 [metric_object]: ../logster/logster_helper.py
