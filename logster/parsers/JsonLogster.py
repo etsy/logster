@@ -93,7 +93,7 @@ class JsonLogster(LogsterParser):
             json_data = json.loads(line)
         except Exception as e:
             raise LogsterParsingException("{0} - {1}".format(type(e), e))
-        self.metrics = self.flatten_object(json.loads(line), self.key_separator, self.key_filter)
+        self.metrics = self.flatten_object(json_data, self.key_separator, self.key_filter)
 
     def get_state(self, duration):
         '''Run any necessary calculations on the data collected from the logs
