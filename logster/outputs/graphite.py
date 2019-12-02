@@ -39,7 +39,11 @@ class GraphiteOutput(LogsterOutput):
             else:
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-            s.connect((host[0], int(host[1])))
+            try:
+                s.connect((host[0], int(host[1])))
+            except Exception as e:
+                self.logger.warning("Can't connect to graphite host: %s", e)
+                return
 
         try:
             for metric in metrics:
