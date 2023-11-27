@@ -5,7 +5,6 @@ try:
 except ImportError:
     from distutils.core import setup
 
-
 setup(
     name="logster",
     version="1.0.1",
