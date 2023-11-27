@@ -3,7 +3,7 @@ import pygtail
 
 
 class PygtailTailer(Tailer):
-    short_name = 'pygtail'
+    short_name = "pygtail"
 
     def ireadlines(self):
         tailer = pygtail.Pygtail(self.logfile, offset_file=self.statefile)

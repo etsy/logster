@@ -29,19 +29,19 @@ import re
 from logster.logster_helper import MetricObject, LogsterParser
 from logster.logster_helper import LogsterParsingException
 
-class SquidLogster(LogsterParser):
 
+class SquidLogster(LogsterParser):
     def __init__(self, option_string=None):
-        '''Initialize any data structures or variables needed for keeping track
-        of the tasty bits we find in the log we are parsing.'''
+        """Initialize any data structures or variables needed for keeping track
+        of the tasty bits we find in the log we are parsing."""
         self.size_transferred = 0
         self.squid_codes = {
-                'TCP_MISS': 0,
-                'TCP_DENIED': 0,
-                'TCP_HIT': 0,
-                'TCP_MEM_HIT': 0,
-                'OTHER': 0,
-                }
+            "TCP_MISS": 0,
+            "TCP_DENIED": 0,
+            "TCP_HIT": 0,
+            "TCP_MEM_HIT": 0,
+            "OTHER": 0,
+        }
         self.http_1xx = 0
         self.http_2xx = 0
         self.http_3xx = 0
@@ -50,12 +50,13 @@ class SquidLogster(LogsterParser):
 
         # Regular expression for matching lines we are interested in, and capturing
         # fields from the line (in this case, http_status_code, size and squid_code).
-        self.reg = re.compile('^[0-9.]+ +(?P<size>[0-9]+) .*(?P<squid_code>(TCP|UDP|NONE)_[A-Z_]+)/(?P<http_status_code>\d{3}) .*')
-
+        self.reg = re.compile(
+            "^[0-9.]+ +(?P<size>[0-9]+) .*(?P<squid_code>(TCP|UDP|NONE)_[A-Z_]+)/(?P<http_status_code>\d{3}) .*"
+        )
 
     def parse_line(self, line):
-        '''This function should digest the contents of one line at a time, updating
-        object's state variables. Takes a single argument, the line to be parsed.'''
+        """This function should digest the contents of one line at a time, updating
+        object's state variables. Takes a single argument, the line to be parsed."""
 
         try:
             # Apply regular expression to each line and extract interesting bits.
@@ -63,17 +64,17 @@ class SquidLogster(LogsterParser):
 
             if regMatch:
                 linebits = regMatch.groupdict()
-                status = int(linebits['http_status_code'])
-                squid_code = linebits['squid_code']
-                size = int(linebits['size'])
+                status = int(linebits["http_status_code"])
+                squid_code = linebits["squid_code"]
+                size = int(linebits["size"])
 
-                if (status < 200):
+                if status < 200:
                     self.http_1xx += 1
-                elif (status < 300):
+                elif status < 300:
                     self.http_2xx += 1
-                elif (status < 400):
+                elif status < 400:
                     self.http_3xx += 1
-                elif (status < 500):
+                elif status < 500:
                     self.http_4xx += 1
                 else:
                     self.http_5xx += 1
@@ -81,7 +82,7 @@ class SquidLogster(LogsterParser):
                 if squid_code in self.squid_codes:
                     self.squid_codes[squid_code] += 1
                 else:
-                    self.squid_codes['OTHER'] += 1
+                    self.squid_codes["OTHER"] += 1
 
                 self.size_transferred += size
 
@@ -91,22 +92,39 @@ class SquidLogster(LogsterParser):
         except Exception as e:
             raise LogsterParsingException("regmatch or contents failed with %s" % e)
 
-
     def get_state(self, duration):
-        '''Run any necessary calculations on the data collected from the logs
-        and return a list of metric objects.'''
+        """Run any necessary calculations on the data collected from the logs
+        and return a list of metric objects."""
         self.duration = float(duration)
 
         # Return a list of metrics objects
         return_array = [
-            MetricObject("http_1xx", (self.http_1xx / self.duration), "Responses per sec"),
-            MetricObject("http_2xx", (self.http_2xx / self.duration), "Responses per sec"),
-            MetricObject("http_3xx", (self.http_3xx / self.duration), "Responses per sec"),
-            MetricObject("http_4xx", (self.http_4xx / self.duration), "Responses per sec"),
-            MetricObject("http_5xx", (self.http_5xx / self.duration), "Responses per sec"),
-            MetricObject("size", (self.size_transferred / self.duration), "Size per sec")
+            MetricObject(
+                "http_1xx", (self.http_1xx / self.duration), "Responses per sec"
+            ),
+            MetricObject(
+                "http_2xx", (self.http_2xx / self.duration), "Responses per sec"
+            ),
+            MetricObject(
+                "http_3xx", (self.http_3xx / self.duration), "Responses per sec"
+            ),
+            MetricObject(
+                "http_4xx", (self.http_4xx / self.duration), "Responses per sec"
+            ),
+            MetricObject(
+                "http_5xx", (self.http_5xx / self.duration), "Responses per sec"
+            ),
+            MetricObject(
+                "size", (self.size_transferred / self.duration), "Size per sec"
+            ),
         ]
         for squid_code in self.squid_codes:
-            return_array.append(MetricObject("squid_" + squid_code, (self.squid_codes[squid_code]/self.duration), "Squid code per sec"))
+            return_array.append(
+                MetricObject(
+                    "squid_" + squid_code,
+                    (self.squid_codes[squid_code] / self.duration),
+                    "Squid code per sec",
+                )
+            )
 
         return return_array
