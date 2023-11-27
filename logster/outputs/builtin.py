@@ -6,12 +6,12 @@ from logster.outputs.cloudwatch import CloudwatchOutput
 from logster.outputs.nsca import NSCAOutput
 
 builtin_output_classes = (
-        StdoutOutput,
-        GraphiteOutput,
-        GangliaOutput,
-        StatsdOutput,
-        CloudwatchOutput,
-        NSCAOutput,
+    StdoutOutput,
+    GraphiteOutput,
+    GangliaOutput,
+    StatsdOutput,
+    CloudwatchOutput,
+    NSCAOutput,
 )
 
 builtin_outputs = dict([(a.shortname, a) for a in builtin_output_classes])
